@@ -142,12 +142,129 @@ function App() {
           )}
 
           {activeSection === 'fila' && (
-            <div className="section-placeholder">
-              <div className="placeholder-content">
-                <i className="placeholder-icon bi bi-wrench"></i>
-                <h2>Fila de Serviço</h2>
-                <p>Módulo para gerenciamento da fila de manutenção</p>
-                <button className="cta-button">Configurar Módulo</button>
+            <div className="kanban-board">
+              <div className="kanban-column">
+                <div className="column-header">
+                  <h3>Aguardando entrada</h3>
+                  <span className="column-count">(3)</span>
+                </div>
+                <div className="column-content">
+                  <div className="kanban-card">
+                    <div className="card-title">EQ-001</div>
+                    <div className="card-description">Notebook Dell - Tela quebrada</div>
+                    <div className="card-meta">
+                      <span className="card-date">2 dias atrás</span>
+                      <span className="card-priority high">Urgente</span>
+                    </div>
+                  </div>
+                  <div className="kanban-card">
+                    <div className="card-title">EQ-015</div>
+                    <div className="card-description">Impressora HP - Não imprime</div>
+                    <div className="card-meta">
+                      <span className="card-date">1 dia atrás</span>
+                      <span className="card-priority medium">Normal</span>
+                    </div>
+                  </div>
+                  <div className="kanban-card">
+                    <div className="card-title">EQ-023</div>
+                    <div className="card-description">Monitor Samsung - Sem imagem</div>
+                    <div className="card-meta">
+                      <span className="card-date">3 horas atrás</span>
+                      <span className="card-priority low">Baixa</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="kanban-column">
+                <div className="column-header">
+                  <h3>Aguardando revisão</h3>
+                  <span className="column-count">(2)</span>
+                </div>
+                <div className="column-content">
+                  <div className="kanban-card">
+                    <div className="card-title">EQ-008</div>
+                    <div className="card-description">Smartphone - Bateria viciada</div>
+                    <div className="card-meta">
+                      <span className="card-date">1 dia atrás</span>
+                      <span className="card-priority medium">Normal</span>
+                    </div>
+                  </div>
+                  <div className="kanban-card">
+                    <div className="card-title">EQ-012</div>
+                    <div className="card-description">Tablet - Touch não funciona</div>
+                    <div className="card-meta">
+                      <span className="card-date">4 horas atrás</span>
+                      <span className="card-priority high">Urgente</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="kanban-column">
+                <div className="column-header">
+                  <h3>Posição de peças</h3>
+                  <span className="column-count">(4)</span>
+                </div>
+                <div className="column-content">
+                  <div className="kanban-card">
+                    <div className="card-title">EQ-005</div>
+                    <div className="card-description">Notebook Lenovo - Troca de HD</div>
+                    <div className="card-meta">
+                      <span className="card-date">3 dias atrás</span>
+                      <span className="card-status waiting">Aguardando peça</span>
+                    </div>
+                  </div>
+                  <div className="kanban-card">
+                    <div className="card-title">EQ-018</div>
+                    <div className="card-description">Desktop - Fonte queimada</div>
+                    <div className="card-meta">
+                      <span className="card-date">2 dias atrás</span>
+                      <span className="card-status waiting">Aguardando peça</span>
+                    </div>
+                  </div>
+                  <div className="kanban-card">
+                    <div className="card-title">EQ-021</div>
+                    <div className="card-description">Impressora - Cabeçote</div>
+                    <div className="card-meta">
+                      <span className="card-date">5 dias atrás</span>
+                      <span className="card-status waiting">Aguardando peça</span>
+                    </div>
+                  </div>
+                  <div className="kanban-card">
+                    <div className="card-title">EQ-029</div>
+                    <div className="card-description">Monitor - Cabo de força</div>
+                    <div className="card-meta">
+                      <span className="card-date">1 dia atrás</span>
+                      <span className="card-status arrived">Peça chegou</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="kanban-column">
+                <div className="column-header">
+                  <h3>Fechamento de OS</h3>
+                  <span className="column-count">(2)</span>
+                </div>
+                <div className="column-content">
+                  <div className="kanban-card">
+                    <div className="card-title">EQ-003</div>
+                    <div className="card-description">Notebook Acer - Limpeza completa</div>
+                    <div className="card-meta">
+                      <span className="card-date">Hoje</span>
+                      <span className="card-status completed">Concluído</span>
+                    </div>
+                  </div>
+                  <div className="kanban-card">
+                    <div className="card-title">EQ-011</div>
+                    <div className="card-description">Desktop - Formatação</div>
+                    <div className="card-meta">
+                      <span className="card-date">Hoje</span>
+                      <span className="card-status completed">Concluído</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
