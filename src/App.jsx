@@ -146,31 +146,37 @@ function App() {
               <div className="kanban-column">
                 <div className="column-header">
                   <h3>Aguardando entrada</h3>
-                  <span className="column-count">(3)</span>
+                  <span className="column-count">(5)</span>
                 </div>
                 <div className="column-content">
                   <div className="kanban-card">
-                    <div className="card-title">EQ-001</div>
-                    <div className="card-description">Notebook Dell - Tela quebrada</div>
-                    <div className="card-meta">
-                      <span className="card-date">2 dias atrás</span>
-                      <span className="card-priority high">Urgente</span>
+                    <div className="card-title">
+                      <span className="equipment-quantity">5</span>
+                      <span className="equipment-model">Notebook Dell Inspiron 15</span>
                     </div>
                   </div>
                   <div className="kanban-card">
-                    <div className="card-title">EQ-015</div>
-                    <div className="card-description">Impressora HP - Não imprime</div>
-                    <div className="card-meta">
-                      <span className="card-date">1 dia atrás</span>
-                      <span className="card-priority medium">Normal</span>
+                    <div className="card-title">
+                      <span className="equipment-quantity">3</span>
+                      <span className="equipment-model">Impressora HP LaserJet</span>
                     </div>
                   </div>
                   <div className="kanban-card">
-                    <div className="card-title">EQ-023</div>
-                    <div className="card-description">Monitor Samsung - Sem imagem</div>
-                    <div className="card-meta">
-                      <span className="card-date">3 horas atrás</span>
-                      <span className="card-priority low">Baixa</span>
+                    <div className="card-title">
+                      <span className="equipment-quantity">8</span>
+                      <span className="equipment-model">Monitor Samsung 24"</span>
+                    </div>
+                  </div>
+                  <div className="kanban-card">
+                    <div className="card-title">
+                      <span className="equipment-quantity">2</span>
+                      <span className="equipment-model">Desktop Lenovo ThinkCentre</span>
+                    </div>
+                  </div>
+                  <div className="kanban-card">
+                    <div className="card-title">
+                      <span className="equipment-quantity">6</span>
+                      <span className="equipment-model">Tablet Samsung Galaxy</span>
                     </div>
                   </div>
                 </div>
