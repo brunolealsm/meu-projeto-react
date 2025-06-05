@@ -8,19 +8,19 @@ function App() {
     { 
       id: 'fila', 
       label: 'Fila de Serviço', 
-      icon: 'SVC',
+      icon: '⚙',
       description: 'Gerenciar fila de manutenção'
     },
     { 
       id: 'estoque', 
       label: 'Estoque', 
-      icon: 'EST',
+      icon: '□',
       description: 'Equipamentos revisados'
     },
     { 
       id: 'retornos', 
       label: 'Retornos', 
-      icon: 'RET',
+      icon: '↺',
       description: 'Processo de retorno'
     }
   ]
@@ -53,7 +53,7 @@ function App() {
               className={`nav-item ${activeSection === 'dashboard' ? 'active' : ''}`}
               onClick={() => setActiveSection('dashboard')}
             >
-              <span className="nav-icon">DAS</span>
+              <span className="nav-icon">▦</span>
               <span>Dashboard</span>
             </button>
           </div>
@@ -184,7 +184,7 @@ function App() {
           {activeSection === 'fila' && (
             <div className="section-placeholder">
               <div className="placeholder-content">
-                <div className="placeholder-icon">SVC</div>
+                <div className="placeholder-icon">⚙</div>
                 <h2>Fila de Serviço</h2>
                 <p>Módulo para gerenciamento da fila de manutenção</p>
                 <button className="cta-button">Configurar Módulo</button>
@@ -195,7 +195,7 @@ function App() {
           {activeSection === 'estoque' && (
             <div className="section-placeholder">
               <div className="placeholder-content">
-                <div className="placeholder-icon">EST</div>
+                <div className="placeholder-icon">□</div>
                 <h2>Controle de Estoque</h2>
                 <p>Módulo para equipamentos revisados e prontos</p>
                 <button className="cta-button">Configurar Módulo</button>
@@ -206,7 +206,7 @@ function App() {
           {activeSection === 'retornos' && (
             <div className="section-placeholder">
               <div className="placeholder-content">
-                <div className="placeholder-icon">RET</div>
+                <div className="placeholder-icon">↺</div>
                 <h2>Processo de Retornos</h2>
                 <p>Módulo para retorno de equipamentos locados</p>
                 <button className="cta-button">Configurar Módulo</button>
