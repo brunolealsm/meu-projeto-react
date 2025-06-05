@@ -8,31 +8,28 @@ function App() {
     { 
       id: 'fila', 
       label: 'Fila de Serviço', 
-      icon: '🔧',
-      color: '#10b981',
+      icon: 'SVC',
       description: 'Gerenciar fila de manutenção'
     },
     { 
       id: 'estoque', 
       label: 'Estoque', 
-      icon: '📦',
-      color: '#f59e0b',
+      icon: 'EST',
       description: 'Equipamentos revisados'
     },
     { 
       id: 'retornos', 
       label: 'Retornos', 
-      icon: '↩️',
-      color: '#ef4444',
+      icon: 'RET',
       description: 'Processo de retorno'
     }
   ]
 
   const statusCards = [
-    { title: 'Equipamentos em Manutenção', value: '24', trend: '+3', color: '#3b82f6' },
-    { title: 'Prontos para Locação', value: '156', trend: '+12', color: '#10b981' },
-    { title: 'Aguardando Retorno', value: '8', trend: '-2', color: '#f59e0b' },
-    { title: 'Técnicos Ativos', value: '6', trend: '0', color: '#8b5cf6' }
+    { title: 'Em Manutenção', value: '24', trend: '+3', status: 'warning' },
+    { title: 'Prontos', value: '156', trend: '+12', status: 'success' },
+    { title: 'Aguardando', value: '8', trend: '-2', status: 'pending' },
+    { title: 'Técnicos', value: '6', trend: '0', status: 'neutral' }
   ]
 
   return (
@@ -41,20 +38,22 @@ function App() {
       <aside className="sidebar">
         <div className="sidebar-header">
           <div className="logo">
-            <span className="logo-icon">🏭</span>
-            <h1>TechOffice</h1>
+            <div className="logo-icon">TO</div>
+            <div className="logo-text">
+              <h1>TechOffice</h1>
+              <span>Sistema de Gestão</span>
+            </div>
           </div>
-          <p className="subtitle">Sistema de Gestão</p>
         </div>
 
         <nav className="sidebar-nav">
           <div className="nav-section">
-            <h3>Menu Principal</h3>
+            <h3>Principal</h3>
             <button 
               className={`nav-item ${activeSection === 'dashboard' ? 'active' : ''}`}
               onClick={() => setActiveSection('dashboard')}
             >
-              <span className="nav-icon">📊</span>
+              <span className="nav-icon">DAS</span>
               <span>Dashboard</span>
             </button>
           </div>
@@ -66,11 +65,9 @@ function App() {
                 key={item.id}
                 className={`nav-item ${activeSection === item.id ? 'active' : ''}`}
                 onClick={() => setActiveSection(item.id)}
-                style={{ '--accent-color': item.color }}
               >
                 <span className="nav-icon">{item.icon}</span>
                 <span>{item.label}</span>
-                <span className="nav-badge">•</span>
               </button>
             ))}
           </div>
@@ -78,8 +75,8 @@ function App() {
 
         <div className="sidebar-footer">
           <div className="user-info">
-            <div className="user-avatar">👤</div>
-            <div>
+            <div className="user-avatar">TC</div>
+            <div className="user-details">
               <div className="user-name">Técnico Admin</div>
               <div className="user-role">Gerente</div>
             </div>
@@ -92,10 +89,10 @@ function App() {
         <header className="main-header">
           <div className="header-left">
             <h1>
-              {activeSection === 'dashboard' && '📊 Dashboard'}
-              {activeSection === 'fila' && '🔧 Fila de Serviço'}
-              {activeSection === 'estoque' && '📦 Estoque'}
-              {activeSection === 'retornos' && '↩️ Retornos'}
+              {activeSection === 'dashboard' && 'Dashboard'}
+              {activeSection === 'fila' && 'Fila de Serviço'}
+              {activeSection === 'estoque' && 'Estoque'}
+              {activeSection === 'retornos' && 'Retornos'}
             </h1>
             <p className="header-subtitle">
               {activeSection === 'dashboard' && 'Visão geral das operações'}
@@ -105,7 +102,9 @@ function App() {
             </p>
           </div>
           <div className="header-right">
-            <button className="notification-btn">🔔</button>
+            <button className="notification-btn">
+              <span className="notification-icon">!</span>
+            </button>
             <div className="date-time">{new Date().toLocaleDateString('pt-BR')}</div>
           </div>
         </header>
@@ -115,7 +114,7 @@ function App() {
             <div className="dashboard">
               <div className="status-cards">
                 {statusCards.map((card, index) => (
-                  <div key={index} className="status-card" style={{ '--card-color': card.color }}>
+                  <div key={index} className={`status-card ${card.status}`}>
                     <div className="card-header">
                       <h3>{card.title}</h3>
                       <span className={`trend ${card.trend.startsWith('+') ? 'positive' : card.trend.startsWith('-') ? 'negative' : 'neutral'}`}>
@@ -129,45 +128,51 @@ function App() {
 
               <div className="dashboard-widgets">
                 <div className="widget">
-                  <h3>🚨 Alertas Importantes</h3>
-                  <ul className="alert-list">
-                    <li className="alert-item urgent">
-                      <span>⚠️</span>
-                      <div>
-                        <strong>Equipamento #EQ-001</strong>
+                  <div className="widget-header">
+                    <h3>Alertas</h3>
+                    <span className="widget-icon">!</span>
+                  </div>
+                  <div className="alert-list">
+                    <div className="alert-item urgent">
+                      <div className="alert-indicator"></div>
+                      <div className="alert-content">
+                        <strong>Equipamento EQ-001</strong>
                         <p>Manutenção urgente necessária</p>
                       </div>
-                    </li>
-                    <li className="alert-item warning">
-                      <span>🔧</span>
-                      <div>
-                        <strong>Técnico João</strong>
+                    </div>
+                    <div className="alert-item warning">
+                      <div className="alert-indicator"></div>
+                      <div className="alert-content">
+                        <strong>Técnico João Silva</strong>
                         <p>Sobrecarga de serviços</p>
                       </div>
-                    </li>
-                    <li className="alert-item info">
-                      <span>📦</span>
-                      <div>
+                    </div>
+                    <div className="alert-item info">
+                      <div className="alert-indicator"></div>
+                      <div className="alert-content">
                         <strong>Estoque baixo</strong>
                         <p>Peças de reposição</p>
                       </div>
-                    </li>
-                  </ul>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="widget">
-                  <h3>📈 Resumo Operacional</h3>
+                  <div className="widget-header">
+                    <h3>Resumo</h3>
+                    <span className="widget-icon">%</span>
+                  </div>
                   <div className="summary-stats">
                     <div className="stat">
-                      <span className="stat-label">Produtividade Hoje</span>
+                      <span className="stat-label">Produtividade</span>
                       <span className="stat-value">87%</span>
                     </div>
                     <div className="stat">
-                      <span className="stat-label">Tempo Médio Reparo</span>
+                      <span className="stat-label">Tempo Médio</span>
                       <span className="stat-value">4.2h</span>
                     </div>
                     <div className="stat">
-                      <span className="stat-label">Satisfação Cliente</span>
+                      <span className="stat-label">Satisfação</span>
                       <span className="stat-value">94%</span>
                     </div>
                   </div>
@@ -178,28 +183,34 @@ function App() {
 
           {activeSection === 'fila' && (
             <div className="section-placeholder">
-              <div className="placeholder-icon">🔧</div>
-              <h2>Fila de Serviço</h2>
-              <p>Aqui será implementado o gerenciamento da fila de manutenção</p>
-              <button className="cta-button">Configurar Módulo</button>
+              <div className="placeholder-content">
+                <div className="placeholder-icon">SVC</div>
+                <h2>Fila de Serviço</h2>
+                <p>Módulo para gerenciamento da fila de manutenção</p>
+                <button className="cta-button">Configurar Módulo</button>
+              </div>
             </div>
           )}
 
           {activeSection === 'estoque' && (
             <div className="section-placeholder">
-              <div className="placeholder-icon">📦</div>
-              <h2>Controle de Estoque</h2>
-              <p>Módulo para gerenciar equipamentos revisados e prontos para locação</p>
-              <button className="cta-button">Configurar Módulo</button>
+              <div className="placeholder-content">
+                <div className="placeholder-icon">EST</div>
+                <h2>Controle de Estoque</h2>
+                <p>Módulo para equipamentos revisados e prontos</p>
+                <button className="cta-button">Configurar Módulo</button>
+              </div>
             </div>
           )}
 
           {activeSection === 'retornos' && (
             <div className="section-placeholder">
-              <div className="placeholder-icon">↩️</div>
-              <h2>Processo de Retornos</h2>
-              <p>Gerenciamento do processo de retorno de equipamentos locados</p>
-              <button className="cta-button">Configurar Módulo</button>
+              <div className="placeholder-content">
+                <div className="placeholder-icon">RET</div>
+                <h2>Processo de Retornos</h2>
+                <p>Módulo para retorno de equipamentos locados</p>
+                <button className="cta-button">Configurar Módulo</button>
+              </div>
             </div>
           )}
         </div>
