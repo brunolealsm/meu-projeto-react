@@ -357,6 +357,10 @@
   max-height: 100%;
 }
 
+.kanban-column:first-child {
+  flex: 0 0 350px;
+}
+
 .column-header {
   padding: 1rem 1.25rem;
   border-bottom: 1px solid #e9ecef;
@@ -435,6 +439,74 @@
   font-weight: 500;
   text-align: left;
   order: 1;
+}
+
+/* Inventory Table */
+.inventory-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.inventory-table-container {
+  overflow-x: auto;
+}
+
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.inventory-table thead th {
+  background: #f8f9fa;
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.inventory-table thead th:last-child {
+  text-align: center;
+  width: 60px;
+}
+
+.inventory-table tbody td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #f5f5f5;
+  color: #333;
+  font-weight: 500;
+}
+
+.inventory-table tbody td:first-child {
+  text-align: left;
+}
+
+.inventory-table tbody td:last-child {
+  text-align: center;
+}
+
+.inventory-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.inventory-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.quantity-badge {
+  background: #f3f4f6;
+  color: #6b7280;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  min-width: 24px;
+  display: inline-block;
+  text-align: center;
 }
 
 .card-description {
@@ -655,6 +727,10 @@
 
    .kanban-column {
      flex: 0 0 250px;
+   }
+
+   .kanban-column:first-child {
+     flex: 0 0 280px;
    }
 
    .column-header {

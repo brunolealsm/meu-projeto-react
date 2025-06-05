@@ -146,37 +146,41 @@ function App() {
               <div className="kanban-column">
                 <div className="column-header">
                   <h3>Aguardando entrada</h3>
-                  <span className="column-count">(5)</span>
+                  <span className="column-count">(1)</span>
                 </div>
                 <div className="column-content">
-                  <div className="kanban-card">
-                    <div className="card-title">
-                      <span className="equipment-quantity">5</span>
-                      <span className="equipment-model">Notebook Dell Inspiron 15</span>
-                    </div>
-                  </div>
-                  <div className="kanban-card">
-                    <div className="card-title">
-                      <span className="equipment-quantity">3</span>
-                      <span className="equipment-model">Impressora HP LaserJet</span>
-                    </div>
-                  </div>
-                  <div className="kanban-card">
-                    <div className="card-title">
-                      <span className="equipment-quantity">8</span>
-                      <span className="equipment-model">Monitor Samsung 24"</span>
-                    </div>
-                  </div>
-                  <div className="kanban-card">
-                    <div className="card-title">
-                      <span className="equipment-quantity">2</span>
-                      <span className="equipment-model">Desktop Lenovo ThinkCentre</span>
-                    </div>
-                  </div>
-                  <div className="kanban-card">
-                    <div className="card-title">
-                      <span className="equipment-quantity">6</span>
-                      <span className="equipment-model">Tablet Samsung Galaxy</span>
+                  <div className="kanban-card inventory-card">
+                    <div className="inventory-table-container">
+                      <table className="inventory-table">
+                        <thead>
+                          <tr>
+                            <th>Modelo</th>
+                            <th>Qtde</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>Monitor Samsung 24"</td>
+                            <td><span className="quantity-badge">8</span></td>
+                          </tr>
+                          <tr>
+                            <td>Tablet Samsung Galaxy</td>
+                            <td><span className="quantity-badge">6</span></td>
+                          </tr>
+                          <tr>
+                            <td>Notebook Dell Inspiron 15</td>
+                            <td><span className="quantity-badge">5</span></td>
+                          </tr>
+                          <tr>
+                            <td>Impressora HP LaserJet</td>
+                            <td><span className="quantity-badge">3</span></td>
+                          </tr>
+                          <tr>
+                            <td>Desktop Lenovo ThinkCentre</td>
+                            <td><span className="quantity-badge">2</span></td>
+                          </tr>
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 </div>
