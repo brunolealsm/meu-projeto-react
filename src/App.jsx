@@ -6,21 +6,27 @@ function App() {
 
   const menuItems = [
     { 
+      id: 'dashboard', 
+      label: 'Dashboard', 
+      icon: 'bi-clipboard2-data-fill',
+      description: 'Visão geral das operações'
+    },
+    { 
       id: 'fila', 
       label: 'Fila de Serviço', 
-      icon: '⚙',
+      icon: 'bi-wrench',
       description: 'Gerenciar fila de manutenção'
     },
     { 
       id: 'estoque', 
       label: 'Estoque', 
-      icon: '□',
+      icon: 'bi-box-seam-fill',
       description: 'Equipamentos revisados'
     },
     { 
       id: 'retornos', 
       label: 'Retornos', 
-      icon: '↺',
+      icon: 'bi-truck',
       description: 'Processo de retorno'
     }
   ]
@@ -34,81 +40,35 @@ function App() {
 
   return (
     <div className="app-container">
-      {/* Sidebar */}
-      <aside className="sidebar">
-        <div className="sidebar-header">
-          <div className="logo">
-            <div className="logo-icon">TO</div>
-            <div className="logo-text">
-              <h1>TechOffice</h1>
-              <span>Sistema de Gestão</span>
-            </div>
-          </div>
+      {/* Header with Logo */}
+      <header className="app-header">
+        <div className="logo">
+          <h1>Gestão Técnica - Oficina</h1>
         </div>
-
-        <nav className="sidebar-nav">
-          <div className="nav-section">
-            <h3>Principal</h3>
-            <button 
-              className={`nav-item ${activeSection === 'dashboard' ? 'active' : ''}`}
-              onClick={() => setActiveSection('dashboard')}
-            >
-              <span className="nav-icon">▦</span>
-              <span>Dashboard</span>
-            </button>
-          </div>
-
-          <div className="nav-section">
-            <h3>Operações</h3>
-            {menuItems.map(item => (
-              <button 
-                key={item.id}
-                className={`nav-item ${activeSection === item.id ? 'active' : ''}`}
-                onClick={() => setActiveSection(item.id)}
-              >
-                <span className="nav-icon">{item.icon}</span>
-                <span>{item.label}</span>
-              </button>
-            ))}
-          </div>
-        </nav>
-
-        <div className="sidebar-footer">
-          <div className="user-info">
-            <div className="user-avatar">TC</div>
-            <div className="user-details">
-              <div className="user-name">Técnico Admin</div>
-              <div className="user-role">Gerente</div>
-            </div>
-          </div>
+        
+        <div className="header-actions">
+          <button className="notification-btn">
+            <i className="bi bi-bell"></i>
+          </button>
         </div>
-      </aside>
+      </header>
+
+      {/* Horizontal Navigation */}
+      <nav className="horizontal-nav">
+        {menuItems.map(item => (
+          <button 
+            key={item.id}
+            className={`nav-button ${activeSection === item.id ? 'active' : ''}`}
+            onClick={() => setActiveSection(item.id)}
+          >
+            <i className={`nav-icon bi ${item.icon}`}></i>
+            <span className="nav-label">{item.label}</span>
+          </button>
+        ))}
+      </nav>
 
       {/* Main Content */}
       <main className="main-content">
-        <header className="main-header">
-          <div className="header-left">
-            <h1>
-              {activeSection === 'dashboard' && 'Dashboard'}
-              {activeSection === 'fila' && 'Fila de Serviço'}
-              {activeSection === 'estoque' && 'Estoque'}
-              {activeSection === 'retornos' && 'Retornos'}
-            </h1>
-            <p className="header-subtitle">
-              {activeSection === 'dashboard' && 'Visão geral das operações'}
-              {activeSection === 'fila' && 'Gerencie a fila de manutenção'}
-              {activeSection === 'estoque' && 'Equipamentos prontos para locação'}
-              {activeSection === 'retornos' && 'Processo de retorno de equipamentos'}
-            </p>
-          </div>
-          <div className="header-right">
-            <button className="notification-btn">
-              <span className="notification-icon">!</span>
-            </button>
-            <div className="date-time">{new Date().toLocaleDateString('pt-BR')}</div>
-          </div>
-        </header>
-
         <div className="content-area">
           {activeSection === 'dashboard' && (
             <div className="dashboard">
@@ -130,7 +90,7 @@ function App() {
                 <div className="widget">
                   <div className="widget-header">
                     <h3>Alertas</h3>
-                    <span className="widget-icon">!</span>
+                    <i className="widget-icon bi bi-exclamation-triangle"></i>
                   </div>
                   <div className="alert-list">
                     <div className="alert-item urgent">
@@ -160,7 +120,7 @@ function App() {
                 <div className="widget">
                   <div className="widget-header">
                     <h3>Resumo</h3>
-                    <span className="widget-icon">%</span>
+                    <i className="widget-icon bi bi-graph-up"></i>
                   </div>
                   <div className="summary-stats">
                     <div className="stat">
@@ -184,7 +144,7 @@ function App() {
           {activeSection === 'fila' && (
             <div className="section-placeholder">
               <div className="placeholder-content">
-                <div className="placeholder-icon">⚙</div>
+                <i className="placeholder-icon bi bi-wrench"></i>
                 <h2>Fila de Serviço</h2>
                 <p>Módulo para gerenciamento da fila de manutenção</p>
                 <button className="cta-button">Configurar Módulo</button>
@@ -195,7 +155,7 @@ function App() {
           {activeSection === 'estoque' && (
             <div className="section-placeholder">
               <div className="placeholder-content">
-                <div className="placeholder-icon">□</div>
+                <i className="placeholder-icon bi bi-box-seam-fill"></i>
                 <h2>Controle de Estoque</h2>
                 <p>Módulo para equipamentos revisados e prontos</p>
                 <button className="cta-button">Configurar Módulo</button>
@@ -206,7 +166,7 @@ function App() {
           {activeSection === 'retornos' && (
             <div className="section-placeholder">
               <div className="placeholder-content">
-                <div className="placeholder-icon">↺</div>
+                <i className="placeholder-icon bi bi-truck"></i>
                 <h2>Processo de Retornos</h2>
                 <p>Módulo para retorno de equipamentos locados</p>
                 <button className="cta-button">Configurar Módulo</button>
