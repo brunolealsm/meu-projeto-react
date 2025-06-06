@@ -1,8 +1,11 @@
 import sql from 'mssql';
 import CryptoJS from 'crypto-js';
+import dotenv from 'dotenv';
 
-// Chave de criptografia (em produção, deve estar em variável de ambiente)
-const ENCRYPTION_KEY = 'TechOffice2024@SecureKey';
+dotenv.config();
+
+// Chave de criptografia (usando enviável de ambiente em produção)
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'TechOffice2024@SecureKey';
 
 // Função para criptografar dados
 const encrypt = (text) => {
@@ -20,11 +23,11 @@ const encryptedPassword = encrypt('sismic2010');
 
 // Configuração da conexão com o banco de dados
 const dbConfig = {
-  server: '192.168.0.152',
-  database: 'DATACLASSIC',
-  user: 'maquinas-usuarios',
+  server: process.env.DB_SERVER || '192.168.0.152',
+  database: process.env.DB_DATABASE || 'DATACLASSIC',
+  user: process.env.DB_USER || 'maquinas-usuarios',
   password: decrypt(encryptedPassword),
-  port: 1433,
+  port: parseInt(process.env.DB_PORT) || 1433,
   options: {
     encrypt: false, // Para SQL Server local/interno
     trustServerCertificate: true,
@@ -143,4 +146,4 @@ export default {
   closeConnection,
   testConnection,
   getDbInfo
-}; 
+};

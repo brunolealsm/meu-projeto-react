@@ -1,24 +1,39 @@
-import { executeQuery, executeStoredProcedure, testConnection } from '../config/database.js';
+// Configuração da API
+const API_BASE_URL = 'http://localhost:3001/api';
 
-// Serviços para gerenciar equipamentos no banco de dados
+// Função auxiliar para fazer requisições HTTP
+const fetchApi = async (endpoint, options = {}) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+      ...options,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(`Erro na API ${endpoint}:`, error);
+    throw error;
+  }
+};
+
+// Serviços para gerenciar equipamentos via API REST
 
 /**
  * Buscar todos os equipamentos aguardando entrada
+ * Consome a API REST do backend que executa a query SQL
  */
 export const getEquipamentosAguardandoEntrada = async () => {
   try {
-    const query = `
-      SELECT 
-        modelo,
-        COUNT(*) as quantidade
-      FROM equipamentos 
-      WHERE status = 'AGUARDANDO_ENTRADA'
-      GROUP BY modelo
-      ORDER BY COUNT(*) DESC
-    `;
-    
-    const result = await executeQuery(query);
-    return result.recordset;
+    const response = await fetchApi('/equipment/aguardando-entrada');
+    return response.data || [];
   } catch (error) {
     console.error('Erro ao buscar equipamentos aguardando entrada:', error);
     throw error;
@@ -26,182 +41,69 @@ export const getEquipamentosAguardandoEntrada = async () => {
 };
 
 /**
- * Buscar equipamentos em revisão
+ * Buscar dados detalhados dos equipamentos aguardando entrada
+ * Consome a API REST do backend
  */
-export const getEquipamentosEmRevisao = async () => {
+export const getDadosDetalhadosAguardandoEntrada = async () => {
   try {
-    const query = `
-      SELECT 
-        codigo,
-        modelo,
-        descricao_problema,
-        data_entrada,
-        prioridade
-      FROM equipamentos 
-      WHERE status = 'EM_REVISAO'
-      ORDER BY 
-        CASE prioridade 
-          WHEN 'URGENTE' THEN 1 
-          WHEN 'NORMAL' THEN 2 
-          WHEN 'BAIXA' THEN 3 
-        END,
-        data_entrada ASC
-    `;
-    
-    const result = await executeQuery(query);
-    return result.recordset;
+    const response = await fetchApi('/equipment/aguardando-entrada/detalhes');
+    return response.data || [];
   } catch (error) {
-    console.error('Erro ao buscar equipamentos em revisão:', error);
+    console.error('Erro ao buscar dados detalhados aguardando entrada:', error);
+    throw error;
+  }
+};
+
+// Outras funções serão implementadas conforme necessário
+// Por enquanto, mantemos apenas as funções essenciais para evitar erros
+
+/**
+ * Buscar detalhes de um equipamento específico
+ * @param {string} nomeEquipamento - Nome do equipamento para filtrar
+ */
+export const getDetalhesEquipamento = async (nomeEquipamento) => {
+  try {
+    const encodedName = encodeURIComponent(nomeEquipamento);
+    const response = await fetchApi(`/equipment/aguardando-entrada/detalhes/${encodedName}`);
+    return response.data || [];
+  } catch (error) {
+    console.error('Erro ao buscar detalhes do equipamento:', error);
     throw error;
   }
 };
 
 /**
- * Buscar equipamentos aguardando peças
- */
-export const getEquipamentosAguardandoPecas = async () => {
-  try {
-    const query = `
-      SELECT 
-        e.codigo,
-        e.modelo,
-        e.descricao_problema,
-        e.data_entrada,
-        p.nome_peca,
-        p.status_peca,
-        p.data_previsao_chegada
-      FROM equipamentos e
-      INNER JOIN pecas_solicitadas p ON e.id = p.equipamento_id
-      WHERE e.status = 'AGUARDANDO_PECAS'
-      ORDER BY e.data_entrada ASC
-    `;
-    
-    const result = await executeQuery(query);
-    return result.recordset;
-  } catch (error) {
-    console.error('Erro ao buscar equipamentos aguardando peças:', error);
-    throw error;
-  }
-};
-
-/**
- * Buscar equipamentos prontos para fechamento
- */
-export const getEquipamentosProntosFechamento = async () => {
-  try {
-    const query = `
-      SELECT 
-        codigo,
-        modelo,
-        descricao_servico,
-        data_conclusao,
-        tecnico_responsavel
-      FROM equipamentos 
-      WHERE status = 'PRONTO_FECHAMENTO'
-      ORDER BY data_conclusao DESC
-    `;
-    
-    const result = await executeQuery(query);
-    return result.recordset;
-  } catch (error) {
-    console.error('Erro ao buscar equipamentos prontos para fechamento:', error);
-    throw error;
-  }
-};
-
-/**
- * Adicionar novo equipamento
- */
-export const adicionarEquipamento = async (equipamento) => {
-  try {
-    const query = `
-      INSERT INTO equipamentos (codigo, modelo, descricao_problema, status, prioridade, data_entrada)
-      VALUES (@codigo, @modelo, @descricao, @status, @prioridade, GETDATE())
-    `;
-    
-    const params = {
-      codigo: equipamento.codigo,
-      modelo: equipamento.modelo,
-      descricao: equipamento.descricao_problema,
-      status: equipamento.status || 'AGUARDANDO_ENTRADA',
-      prioridade: equipamento.prioridade || 'NORMAL'
-    };
-    
-    const result = await executeQuery(query, params);
-    return result;
-  } catch (error) {
-    console.error('Erro ao adicionar equipamento:', error);
-    throw error;
-  }
-};
-
-/**
- * Atualizar status do equipamento
- */
-export const atualizarStatusEquipamento = async (codigo, novoStatus) => {
-  try {
-    const query = `
-      UPDATE equipamentos 
-      SET status = @status, data_atualizacao = GETDATE()
-      WHERE codigo = @codigo
-    `;
-    
-    const params = {
-      codigo: codigo,
-      status: novoStatus
-    };
-    
-    const result = await executeQuery(query, params);
-    return result;
-  } catch (error) {
-    console.error('Erro ao atualizar status do equipamento:', error);
-    throw error;
-  }
-};
-
-/**
- * Buscar estatísticas gerais
- */
-export const getEstatisticasGerais = async () => {
-  try {
-    const query = `
-      SELECT 
-        COUNT(CASE WHEN status = 'EM_MANUTENCAO' THEN 1 END) as em_manutencao,
-        COUNT(CASE WHEN status = 'PRONTO' THEN 1 END) as prontos,
-        COUNT(CASE WHEN status = 'AGUARDANDO_ENTRADA' THEN 1 END) as aguardando,
-        COUNT(DISTINCT tecnico_responsavel) as tecnicos_ativos
-      FROM equipamentos
-      WHERE data_entrada >= DATEADD(month, -1, GETDATE())
-    `;
-    
-    const result = await executeQuery(query);
-    return result.recordset[0];
-  } catch (error) {
-    console.error('Erro ao buscar estatísticas gerais:', error);
-    throw error;
-  }
-};
-
-/**
- * Testar conexão com o banco
+ * Testar conexão com o banco via API
  */
 export const testarConexaoBanco = async () => {
   try {
-    const conexaoOk = await testConnection();
-    return conexaoOk;
+    const response = await fetchApi('/equipment/test-connection');
+    return response.connected || false;
   } catch (error) {
     console.error('Erro no teste de conexão:', error);
     return false;
   }
 };
 
+/**
+ * Buscar histórico de ordens de serviço por série
+ * @param {string} serie - Número de série do equipamento
+ */
+export const getHistoricoOrdemServico = async (serie) => {
+  try {
+    const encodedSerie = encodeURIComponent(serie);
+    const response = await fetchApi(`/equipment/historico-os/${encodedSerie}`);
+    return response.data || { historico: [] };
+  } catch (error) {
+    console.error('Erro ao buscar histórico de OS:', error);
+    throw error;
+  }
+};
+
 export default {
   getEquipamentosAguardandoEntrada,
-  getEquipamentosEmRevisao,
-  getEquipamentosAguardandoPecas,
-  getEquipamentosProntosFechamento,
-  adicionarEquipamento,
-  atualizarStatusEquipamento,
-  getEstatisticasGerais,
-  testarConexaoBanco
+  getDadosDetalhadosAguardandoEntrada,
+  getDetalhesEquipamento,
+  testarConexaoBanco,
+  getHistoricoOrdemServico
 }; 
