@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import './App.css'
-import { getEquipamentosAguardandoEntrada, getDetalhesEquipamento, getHistoricoOrdemServico } from './services/equipmentService.js'
+import { getEquipamentosAguardandoEntrada, getDetalhesEquipamento, getHistoricoOrdemServico, getEquipamentosAguardandoRevisao, getDetalhesEquipamentoRevisao } from './services/equipmentService.js'
+import ModalSelecaoTecnico from './components/ModalSelecaoTecnico.jsx'
 // import jsPDF from 'jspdf'
 // import 'jspdf-autotable'
 
@@ -8,8 +9,13 @@ function App() {
   const [activeSection, setActiveSection] = useState('dashboard')
   const [equipamentosAguardandoEntrada, setEquipamentosAguardandoEntrada] = useState([])
   const [totalQuantidadeAguardando, setTotalQuantidadeAguardando] = useState(0)
+  const [equipamentosAguardandoRevisao, setEquipamentosAguardandoRevisao] = useState([])
+  const [totalQuantidadeRevisao, setTotalQuantidadeRevisao] = useState(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  
+  // Estado para o botão de atualização do menu
+  const [atualizandoDados, setAtualizandoDados] = useState(false)
   
   // Estados para o modal de detalhes
   const [modalAberto, setModalAberto] = useState(false)
@@ -17,6 +23,7 @@ function App() {
   const [detalhesEquipamento, setDetalhesEquipamento] = useState([])
   const [loadingDetalhes, setLoadingDetalhes] = useState(false)
   const [errorDetalhes, setErrorDetalhes] = useState(null)
+  const [modalTeste, setModalTeste] = useState(false) // Flag para indicar se o modal está em modo teste
   
   // Estado para filtro de busca no modal
   const [filtroModal, setFiltroModal] = useState('')
@@ -26,7 +33,8 @@ function App() {
     visible: false,
     x: 0,
     y: 0,
-    item: null
+    item: null,
+    isTeste: false // Flag para identificar se é dados de teste
   })
 
   // Estado para ordenação da tabela
@@ -43,6 +51,113 @@ function App() {
   const [historicoOS, setHistoricoOS] = useState(null)
   const [loadingHistorico, setLoadingHistorico] = useState(false)
   const [errorHistorico, setErrorHistorico] = useState(null)
+
+  // Estados para seleção de registros no modal de revisão
+  const [registrosSelecionados, setRegistrosSelecionados] = useState(new Set())
+  const [selecionarTodos, setSelecionarTodos] = useState(false)
+  const [modoSelecaoAtivo, setModoSelecaoAtivo] = useState(false)
+
+  // Estados para modal de seleção de técnico
+  const [modalTecnicoAberto, setModalTecnicoAberto] = useState(false)
+
+  // Estados para o filtro hierárquico
+  const [filtroHierarquicoAberto, setFiltroHierarquicoAberto] = useState(false)
+  const [filtrosMarcaSelecionadas, setFiltrosMarcaSelecionadas] = useState(new Set())
+  const [filtrosSubgrupoSelecionados, setFiltrosSubgrupoSelecionados] = useState(new Set())
+  const [filtroAtivo, setFiltroAtivo] = useState(false)
+  const [dadosFiltro, setDadosFiltro] = useState({ marcas: [], subgrupos: [] })
+
+
+
+  // Dados de exemplo para detalhes de equipamentos em revisão
+  const detalhesExemploRevisao = [
+    {
+      id: 1,
+      ntfisc: '12345',
+      pedido: 'PED001',
+      serie: 'HP001234',
+      motivoret: 'Revisão preventiva',
+      dtreceb: '2024-01-15',
+      Cabo: 'Sim',
+      Conferente: 'João Silva'
+    },
+    {
+      id: 2,
+      ntfisc: '12346',
+      pedido: 'PED002',
+      serie: 'CN005678',
+      motivoret: 'Manutenção corretiva',
+      dtreceb: '2024-01-16',
+      Cabo: 'Não',
+      Conferente: 'Maria Santos'
+    },
+    {
+      id: 3,
+      ntfisc: '12347',
+      pedido: 'PED003',
+      serie: 'EP009012',
+      motivoret: 'Limpeza e revisão',
+      dtreceb: '2024-01-17',
+      Cabo: 'Sim',
+      Conferente: 'Pedro Costa'
+    },
+    {
+      id: 4,
+      ntfisc: '12348',
+      pedido: 'PED004',
+      serie: 'FJ003456',
+      motivoret: 'Calibração',
+      dtreceb: '2024-01-18',
+      Cabo: 'Sim',
+      Conferente: 'Ana Oliveira'
+    }
+  ]
+
+  // Dados de exemplo para histórico de OS
+  const historicoExemplo = {
+    equipamento: {
+      serie: 'HP001234',
+      produto: 'IMPRESSORA HP LASERJET'
+    },
+    ultimoAtendimento: '2024-01-10',
+    ultimaOS: '12345',
+    ultimoTecnico: 'Carlos Mendes',
+    historico: [
+      {
+        os: '12345',
+        data: '2024-01-05',
+        motivo: 'Revisão preventiva',
+        tecnico: 'Carlos Mendes',
+        fechamento: '2024-01-10',
+        condicao: '1-BOM',
+        contadorPB: 15000,
+        contadorCor: 5000,
+        laudo: 'Equipamento revisado completamente. Substituído toner e kit de manutenção.'
+      },
+      {
+        os: '11234',
+        data: '2023-12-15',
+        motivo: 'Manutenção corretiva',
+        tecnico: 'Ana Ferreira',
+        fechamento: '2023-12-20',
+        condicao: '2-REGULAR',
+        contadorPB: 14500,
+        contadorCor: 4800,
+        laudo: 'Reparo no sistema de alimentação de papel.'
+      },
+      {
+        os: '10123',
+        data: '2023-11-20',
+        motivo: 'Limpeza geral',
+        tecnico: 'Roberto Lima',
+        fechamento: '2023-11-22',
+        condicao: '1-BOM',
+        contadorPB: 14000,
+        contadorCor: 4500,
+        laudo: 'Limpeza completa realizada. Equipamento funcionando perfeitamente.'
+      }
+    ]
+  }
 
   const menuItems = [
     { 
@@ -98,11 +213,71 @@ function App() {
     }
   }
 
+  // Função para carregar dados dos equipamentos aguardando revisão
+  const carregarEquipamentosAguardandoRevisao = async () => {
+    try {
+      // Se há filtro ativo, buscar dados detalhados e agrupar
+      if (filtroAtivo && filtrosSubgrupoSelecionados.size > 0) {
+        const response = await fetch('http://localhost:3001/api/equipment/aguardando-revisao/detalhes')
+        if (!response.ok) {
+          throw new Error(`Erro HTTP: ${response.status}`)
+        }
+        
+        const result = await response.json()
+        const dadosDetalhados = result.data || result
+        
+        // Filtrar dados baseado nas seleções hierárquicas
+        const dadosFiltrados = dadosDetalhados.filter(item => {
+          const marca = item.TB01047_NOME || 'Sem marca'
+          const subgrupo = item.TB01018_NOME || 'Sem subgrupo'
+          const chave = `${marca}|${subgrupo}`
+          return filtrosSubgrupoSelecionados.has(chave)
+        })
+        
+        // Agrupar por equipamento
+        const equipamentosAgrupados = dadosFiltrados.reduce((acc, item) => {
+          const nomeEquipamento = item.TB01010_NOME
+          if (!acc[nomeEquipamento]) {
+            acc[nomeEquipamento] = 0
+          }
+          acc[nomeEquipamento]++
+          return acc
+        }, {})
+        
+        // Converter para formato esperado
+        const equipamentosFiltrados = Object.entries(equipamentosAgrupados).map(([equipamento, quantidade]) => ({
+          equipamento,
+          quantidade: quantidade
+        }))
+        
+        setEquipamentosAguardandoRevisao(equipamentosFiltrados)
+        
+        // Calcular total de quantidade
+        const total = equipamentosFiltrados.reduce((acc, item) => acc + (item.quantidade || 0), 0)
+        setTotalQuantidadeRevisao(total)
+        
+      } else {
+        // Carregar dados normais sem filtro
+        const dados = await getEquipamentosAguardandoRevisao()
+        setEquipamentosAguardandoRevisao(dados)
+        
+        // Calcular total das quantidades
+        const total = dados.reduce((acc, item) => acc + (item.quantidade || 0), 0)
+        setTotalQuantidadeRevisao(total)
+      }
+      
+    } catch (err) {
+      console.error('Erro ao carregar equipamentos em revisão:', err)
+      setTotalQuantidadeRevisao(0)
+    }
+  }
+
   // Função para abrir modal com detalhes do equipamento
   const abrirModalDetalhes = async (nomeEquipamento) => {
     try {
       setEquipamentoSelecionado(nomeEquipamento)
       setModalAberto(true)
+      setModalTeste(false)
       setLoadingDetalhes(true)
       setErrorDetalhes(null)
       
@@ -116,16 +291,261 @@ function App() {
     }
   }
 
+  // Função para abrir modal com dados reais (Aguardando Revisão)
+  const abrirModalDetalhesRevisao = async (nomeEquipamento) => {
+    try {
+      setEquipamentoSelecionado(nomeEquipamento)
+      setModalAberto(true)
+      setModalTeste(true)
+      setLoadingDetalhes(true)
+      setErrorDetalhes(null)
+      
+      const detalhes = await getDetalhesEquipamentoRevisao(nomeEquipamento)
+      setDetalhesEquipamento(detalhes)
+    } catch (err) {
+      console.error('Erro ao carregar detalhes do equipamento em revisão:', err)
+      setErrorDetalhes('Erro ao carregar detalhes do equipamento')
+    } finally {
+      setLoadingDetalhes(false)
+    }
+  }
+
   // Função para fechar modal
   const fecharModal = () => {
     setModalAberto(false)
     setEquipamentoSelecionado('')
     setDetalhesEquipamento([])
     setErrorDetalhes(null)
+    setModalTeste(false)
     setFiltroModal('')
     setOrdenacao({ campo: null, direcao: 'asc' })
     setMenuOpcoes(false)
+    setRegistrosSelecionados(new Set())
+    setSelecionarTodos(false)
+    setModoSelecaoAtivo(false)
     fecharContextMenu()
+  }
+
+  // Funções para gerenciar seleção de registros
+  const toggleSelecionarTodos = () => {
+    const dadosProcessados = obterDadosProcessados()
+    if (selecionarTodos) {
+      // Desmarcar todos
+      setRegistrosSelecionados(new Set())
+      setSelecionarTodos(false)
+    } else {
+      // Marcar todos
+      const todosIds = new Set(dadosProcessados.map((_, index) => index))
+      setRegistrosSelecionados(todosIds)
+      setSelecionarTodos(true)
+    }
+  }
+
+  const toggleSelecionarRegistro = (index) => {
+    const novaSelecao = new Set(registrosSelecionados)
+    if (novaSelecao.has(index)) {
+      novaSelecao.delete(index)
+    } else {
+      novaSelecao.add(index)
+    }
+    setRegistrosSelecionados(novaSelecao)
+    
+    // Atualizar estado do "selecionar todos"
+    const dadosProcessados = obterDadosProcessados()
+    setSelecionarTodos(novaSelecao.size === dadosProcessados.length && dadosProcessados.length > 0)
+  }
+
+  const obterRegistrosSelecionados = () => {
+    const dadosProcessados = obterDadosProcessados()
+    return Array.from(registrosSelecionados).map(index => dadosProcessados[index]).filter(Boolean)
+  }
+
+  const ativarModoSelecao = () => {
+    setModoSelecaoAtivo(true)
+    setMenuOpcoes(false)
+  }
+
+  // Função para abrir modal de seleção de técnico
+  const abrirModalTecnico = () => {
+    const registros = obterRegistrosSelecionados()
+    if (registros.length === 0) return
+    
+    setModalTecnicoAberto(true)
+  }
+
+  // Função para fechar modal de técnico
+  const fecharModalTecnico = () => {
+    setModalTecnicoAberto(false)
+  }
+
+  // Função para lidar com sucesso do direcionamento
+  const handleSucessoDirecionamento = async () => {
+    // Atualizar dados do modal
+    if (modalTeste && equipamentoSelecionado) {
+      await abrirModalDetalhesRevisao(equipamentoSelecionado)
+    }
+    
+    // Atualizar dados da coluna
+    await carregarEquipamentosAguardandoRevisao()
+    
+    // Resetar seleções
+    setRegistrosSelecionados(new Set())
+    setSelecionarTodos(false)
+    setModoSelecaoAtivo(false)
+    
+    // Fechar modal de técnico
+    setModalTecnicoAberto(false)
+  }
+
+  // Funções para o filtro hierárquico
+  const prepararDadosFiltro = (dados) => {
+    const marcas = new Map()
+    
+    dados.forEach(item => {
+      const marca = item.TB01047_NOME || 'Sem marca'
+      const subgrupo = item.TB01018_NOME || 'Sem subgrupo'
+      
+      if (!marcas.has(marca)) {
+        marcas.set(marca, new Set())
+      }
+      marcas.get(marca).add(subgrupo)
+    })
+    
+    const dadosEstruturados = {
+      marcas: Array.from(marcas.keys()).map(marca => ({
+        nome: marca,
+        subgrupos: Array.from(marcas.get(marca)).map(sub => ({ nome: sub }))
+      }))
+    }
+    
+    setDadosFiltro(dadosEstruturados)
+  }
+
+  const abrirFiltroHierarquico = async () => {
+    if (filtroHierarquicoAberto) {
+      setFiltroHierarquicoAberto(false)
+      return
+    }
+    
+    try {
+      // Buscar todos os dados da coluna para preparar o filtro
+      const response = await fetch('http://localhost:3001/api/equipment/aguardando-revisao/detalhes')
+      if (!response.ok) {
+        throw new Error(`Erro HTTP: ${response.status}`)
+      }
+      const result = await response.json()
+      const dados = result.data || result // Acessar propriedade 'data' ou usar resultado direto
+      prepararDadosFiltro(dados)
+      setFiltroHierarquicoAberto(true)
+    } catch (error) {
+      console.error('Erro ao carregar dados para filtro:', error)
+      // Se falhar na API, usar dados de teste
+      const dadosTesteTemp = {
+        marcas: [
+          {
+            nome: 'BROTHER',
+            subgrupos: [
+              { nome: 'IMPRESSORA' },
+              { nome: 'MULTIFUNCIONAL' }
+            ]
+          },
+          {
+            nome: 'HP',
+            subgrupos: [
+              { nome: 'IMPRESSORA' },
+              { nome: 'SCANNER' }
+            ]
+          }
+        ]
+      }
+      setDadosFiltro(dadosTesteTemp)
+      setFiltroHierarquicoAberto(true)
+    }
+  }
+
+  const fecharFiltroHierarquico = () => {
+    setFiltroHierarquicoAberto(false)
+  }
+
+  const toggleMarcaFiltro = (marca) => {
+    const novasMarcas = new Set(filtrosMarcaSelecionadas)
+    const novosSubgrupos = new Set(filtrosSubgrupoSelecionados)
+    
+    if (novasMarcas.has(marca)) {
+      // Desmarcar marca e todos os subgrupos dela
+      novasMarcas.delete(marca)
+      const marcaObj = dadosFiltro.marcas.find(m => m.nome === marca)
+      if (marcaObj) {
+        marcaObj.subgrupos.forEach(sub => {
+          novosSubgrupos.delete(`${marca}|${sub.nome}`)
+        })
+      }
+    } else {
+      // Marcar marca e todos os subgrupos dela
+      novasMarcas.add(marca)
+      const marcaObj = dadosFiltro.marcas.find(m => m.nome === marca)
+      if (marcaObj) {
+        marcaObj.subgrupos.forEach(sub => {
+          novosSubgrupos.add(`${marca}|${sub.nome}`)
+        })
+      }
+    }
+    
+    setFiltrosMarcaSelecionadas(novasMarcas)
+    setFiltrosSubgrupoSelecionados(novosSubgrupos)
+  }
+
+  const toggleSubgrupoFiltro = (marca, subgrupo) => {
+    const chave = `${marca}|${subgrupo}`
+    const novosSubgrupos = new Set(filtrosSubgrupoSelecionados)
+    const novasMarcas = new Set(filtrosMarcaSelecionadas)
+    
+    if (novosSubgrupos.has(chave)) {
+      novosSubgrupos.delete(chave)
+      // Verificar se ainda tem outros subgrupos da marca selecionados
+      const marcaObj = dadosFiltro.marcas.find(m => m.nome === marca)
+      if (marcaObj) {
+        const temOutrosSubgrupos = marcaObj.subgrupos.some(sub => 
+          sub.nome !== subgrupo && novosSubgrupos.has(`${marca}|${sub.nome}`)
+        )
+        if (!temOutrosSubgrupos) {
+          novasMarcas.delete(marca)
+        }
+      }
+    } else {
+      novosSubgrupos.add(chave)
+      // Verificar se todos os subgrupos da marca estão selecionados
+      const marcaObj = dadosFiltro.marcas.find(m => m.nome === marca)
+      if (marcaObj) {
+        const todosSubgruposSelecionados = marcaObj.subgrupos.every(sub => 
+          novosSubgrupos.has(`${marca}|${sub.nome}`)
+        )
+        if (todosSubgruposSelecionados) {
+          novasMarcas.add(marca)
+        }
+      }
+    }
+    
+    setFiltrosSubgrupoSelecionados(novosSubgrupos)
+    setFiltrosMarcaSelecionadas(novasMarcas)
+  }
+
+  const aplicarFiltroHierarquico = async () => {
+    setFiltroAtivo(filtrosSubgrupoSelecionados.size > 0)
+    setFiltroHierarquicoAberto(false)
+    
+    // Recarregar dados da coluna com filtro aplicado
+    await carregarEquipamentosAguardandoRevisao()
+  }
+
+  const limparFiltroHierarquico = async () => {
+    setFiltrosMarcaSelecionadas(new Set())
+    setFiltrosSubgrupoSelecionados(new Set())
+    setFiltroAtivo(false)
+    setFiltroHierarquicoAberto(false)
+    
+    // Recarregar dados da coluna sem filtro
+    await carregarEquipamentosAguardandoRevisao()
   }
 
   // Função para formatar data em PT-BR
@@ -139,19 +559,52 @@ function App() {
     }
   }
 
+  // Função para formatar data e hora em PT-BR (dd/MM/yyyy hh:mm)
+  const formatarDataHora = (data) => {
+    if (!data) return 'N/A'
+    try {
+      const date = new Date(data)
+      return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    } catch {
+      return 'Data inválida'
+    }
+  }
+
+  // Função para formatar números com pontuação de milhar
+  const formatarNumero = (numero) => {
+    if (!numero || numero === 0 || numero === '0') return ''
+    try {
+      return parseInt(numero).toLocaleString('pt-BR')
+    } catch {
+      return ''
+    }
+  }
+
   // Função para filtrar os detalhes do equipamento
   const filtrarDetalhes = () => {
     if (!filtroModal.trim()) return detalhesEquipamento
     
     const termoBusca = filtroModal.toLowerCase().trim()
-    return detalhesEquipamento.filter(item => 
-      (item.ntfisc || '').toString().toLowerCase().includes(termoBusca) ||
-      (item.pedido || '').toString().toLowerCase().includes(termoBusca) ||
-      (item.serie || '').toString().toLowerCase().includes(termoBusca) ||
-      (item.motivoret || '').toString().toLowerCase().includes(termoBusca) ||
-      (item.Cabo || '').toString().toLowerCase().includes(termoBusca) ||
-      (item.Conferente || '').toString().toLowerCase().includes(termoBusca)
-    )
+    
+    if (modalTeste) {
+      // Filtro para dados de Aguardando Revisão
+      return detalhesEquipamento.filter(item => 
+        (item.codprod || '').toString().toLowerCase().includes(termoBusca) ||
+        (item.serie || '').toString().toLowerCase().includes(termoBusca) ||
+        (item.OS_REVISAO || '').toString().toLowerCase().includes(termoBusca) ||
+        (item.OS_REVISAO_DIAS || '').toString().toLowerCase().includes(termoBusca)
+      )
+    } else {
+      // Filtro para dados de Aguardando Entrada
+      return detalhesEquipamento.filter(item => 
+        (item.ntfisc || '').toString().toLowerCase().includes(termoBusca) ||
+        (item.pedido || '').toString().toLowerCase().includes(termoBusca) ||
+        (item.serie || '').toString().toLowerCase().includes(termoBusca) ||
+        (item.motivoret || '').toString().toLowerCase().includes(termoBusca) ||
+        (item.Cabo || '').toString().toLowerCase().includes(termoBusca) ||
+        (item.Conferente || '').toString().toLowerCase().includes(termoBusca)
+      )
+    }
   }
 
   // Função para ordenar dados por data de recebimento
@@ -194,16 +647,33 @@ function App() {
     try {
       const dados = obterDadosProcessados()
       
-      // Preparar dados para exportação
-      const dadosExportacao = dados.map(item => ({
-        'Nota Fiscal': item.ntfisc || '',
-        'Pedido': item.pedido || '',
-        'Número de Série': item.serie || '',
-        'Motivo': item.motivoret || '',
-        'Recebimento': formatarData(item.dtreceb),
-        'Cabo': item.Cabo || '',
-        'Conferente': item.Conferente || ''
-      }))
+      // Preparar dados para exportação baseado no tipo de modal
+      let dadosExportacao
+      
+      if (modalTeste) {
+        // Dados para Aguardando Revisão
+        dadosExportacao = dados.map(item => ({
+          'Código': item.codprod || '',
+          'Número de Série': item.serie || '',
+          'Ordem de Serviço': item.OS_REVISAO || '',
+          'Data de Abertura': formatarDataHora(item.OS_REVISAO_DATA),
+          'Últ. Cont. PB': formatarNumero(item.ULT_CONTADOR_PB),
+          'Últ. Cont. Cor': formatarNumero(item.ULT_CONTADOR_COR),
+          'Fech. c/ peça': item.QTDE_OS_PECA || '',
+          'Fech. c/ troca': item.QTDE_OS_TROCA || ''
+        }))
+      } else {
+        // Dados para Aguardando Entrada
+        dadosExportacao = dados.map(item => ({
+          'Nota Fiscal': item.ntfisc || '',
+          'Pedido': item.pedido || '',
+          'Número de Série': item.serie || '',
+          'Motivo': item.motivoret || '',
+          'Recebimento': formatarData(item.dtreceb),
+          'Cabo': item.Cabo || '',
+          'Conferente': item.Conferente || ''
+        }))
+      }
 
       // Função para escapar valores CSV
       const escapeCsv = (value) => {
@@ -238,7 +708,8 @@ function App() {
       // Gerar nome do arquivo com data/hora
       const agora = new Date()
       const dataHora = agora.toISOString().slice(0, 19).replace(/[:-]/g, '').replace('T', '_')
-      const nomeArquivo = `equipamentos_aguardando_entrada_${dataHora}.csv`
+      const tipoRelatorio = modalTeste ? 'aguardando_revisao' : 'aguardando_entrada'
+      const nomeArquivo = `equipamentos_${tipoRelatorio}_${dataHora}.csv`
       
       link.href = url
       link.download = nomeArquivo
@@ -271,12 +742,14 @@ function App() {
       const horaExportacao = agora.toLocaleTimeString('pt-BR')
 
       // Criar HTML para impressão
+      const tituloRelatorio = modalTeste ? 'Equipamentos aguardando revisão técnica' : 'Equipamentos retornados sem entrada de nota fiscal'
+      
       const htmlContent = `
         <!DOCTYPE html>
         <html>
         <head>
           <meta charset="UTF-8">
-          <title>Equipamentos retornados sem entrada de nota fiscal</title>
+          <title>${tituloRelatorio}</title>
           <style>
             @page {
               size: A4 portrait;
@@ -334,6 +807,10 @@ function App() {
               word-wrap: break-word;
             }
             
+            .center {
+              text-align: center;
+            }
+            
             th {
               background-color: #f1f5f9;
               font-weight: bold;
@@ -369,7 +846,7 @@ function App() {
         </head>
         <body>
           <div class="header">
-            <div class="title">Equipamentos retornados sem entrada de nota fiscal</div>
+            <div class="title">${tituloRelatorio}</div>
             <div class="subtitle">Equipamento: ${equipamentoSelecionado}</div>
           </div>
           
@@ -377,17 +854,39 @@ function App() {
             <table>
               <thead>
                 <tr>
-                  <th>Nota Fiscal</th>
-                  <th>Pedido</th>
-                  <th>Número de Série</th>
-                  <th>Motivo</th>
-                  <th>Recebimento</th>
-                  <th>Cabo</th>
-                  <th>Conferente</th>
+                  ${modalTeste ? `
+                    <th>Código</th>
+                    <th>Número de Série</th>
+                    <th>Ordem de Serviço</th>
+                    <th>Data de Abertura</th>
+                    <th class="center">Últ. Cont. PB</th>
+                    <th class="center">Últ. Cont. Cor</th>
+                    <th class="center">Fech. c/ peça</th>
+                    <th class="center">Fech. c/ troca</th>
+                  ` : `
+                    <th>Nota Fiscal</th>
+                    <th>Pedido</th>
+                    <th>Número de Série</th>
+                    <th>Motivo</th>
+                    <th>Recebimento</th>
+                    <th>Cabo</th>
+                    <th>Conferente</th>
+                  `}
                 </tr>
               </thead>
               <tbody>
-                ${dados.map(item => `
+                ${dados.map(item => modalTeste ? `
+                  <tr>
+                    <td>${item.codprod || ''}</td>
+                    <td>${item.serie || ''}</td>
+                    <td>${item.OS_REVISAO || ''}</td>
+                    <td>${formatarDataHora(item.OS_REVISAO_DATA)}</td>
+                    <td class="center">${formatarNumero(item.ULT_CONTADOR_PB)}</td>
+                    <td class="center">${formatarNumero(item.ULT_CONTADOR_COR)}</td>
+                    <td class="center">${item.QTDE_OS_PECA || ''}</td>
+                    <td class="center">${item.QTDE_OS_TROCA || ''}</td>
+                  </tr>
+                ` : `
                   <tr>
                     <td>${item.ntfisc || ''}</td>
                     <td>${item.pedido || ''}</td>
@@ -438,13 +937,14 @@ function App() {
   }
 
   // Funções para menu de contexto
-  const handleContextMenu = (e, item) => {
+  const handleContextMenu = (e, item, isTeste = false) => {
     e.preventDefault()
     setContextMenu({
       visible: true,
       x: e.clientX,
       y: e.clientY,
-      item: item
+      item: item,
+      isTeste: isTeste
     })
   }
 
@@ -472,6 +972,25 @@ function App() {
     } finally {
       setLoadingHistorico(false)
     }
+  }
+
+  // Função para histórico de OS com dados de teste
+  const handleHistoricoOrdensRevisao = (item) => {
+    fecharContextMenu()
+    setLoadingHistorico(false)
+    setErrorHistorico(null)
+    setModalHistoricoAberto(true)
+    
+    // Personalizar dados de exemplo com base no item
+    const historicoPersonalizado = {
+      ...historicoExemplo,
+      equipamento: {
+        serie: item.serie,
+        produto: equipamentoSelecionado
+      }
+    }
+    
+    setHistoricoOS(historicoPersonalizado)
   }
 
   // Função para fechar modal de histórico
@@ -594,17 +1113,21 @@ function App() {
   useEffect(() => {
     if (activeSection === 'fila') {
       carregarEquipamentosAguardandoEntrada()
+      carregarEquipamentosAguardandoRevisao()
     }
   }, [activeSection])
 
-  // useEffect para fechar menu de contexto ao clicar fora
+  // useEffect para fechar menu de contexto e dropdown de filtro ao clicar fora
   useEffect(() => {
-    const handleClickOutside = () => {
-      if (contextMenu.visible) {
+    const handleClickOutside = (e) => {
+      if (contextMenu.visible && !e.target.closest('.context-menu')) {
         fecharContextMenu()
       }
-      if (menuOpcoes) {
+      if (menuOpcoes && !e.target.closest('.options-dropdown')) {
         setMenuOpcoes(false)
+      }
+      if (filtroHierarquicoAberto && !e.target.closest('.filter-dropdown') && !e.target.closest('.filter-hierarchy-button')) {
+        setFiltroHierarquicoAberto(false)
       }
     }
 
@@ -616,10 +1139,13 @@ function App() {
         if (menuOpcoes) {
           setMenuOpcoes(false)
         }
+        if (filtroHierarquicoAberto) {
+          setFiltroHierarquicoAberto(false)
+        }
       }
     }
 
-    if (contextMenu.visible || menuOpcoes) {
+    if (contextMenu.visible || menuOpcoes || filtroHierarquicoAberto) {
       document.addEventListener('click', handleClickOutside)
       document.addEventListener('keydown', handleEscapeKey)
     }
@@ -628,7 +1154,45 @@ function App() {
       document.removeEventListener('click', handleClickOutside)
       document.removeEventListener('keydown', handleEscapeKey)
     }
-  }, [contextMenu.visible, menuOpcoes])
+  }, [contextMenu.visible, menuOpcoes, filtroHierarquicoAberto])
+
+  // Função para atualizar dados da seção atual
+  const atualizarDadosSecaoAtual = async () => {
+    try {
+      setAtualizandoDados(true)
+      setError(null)
+      
+      switch (activeSection) {
+        case 'fila':
+          await Promise.all([
+            carregarEquipamentosAguardandoEntrada(),
+            carregarEquipamentosAguardandoRevisao()
+          ])
+          break
+        case 'dashboard':
+          // Para dashboard, podemos recarregar os dados dos cards ou outras informações
+          console.log('Atualizando dados do dashboard...')
+          // Aqui você pode adicionar funções específicas do dashboard no futuro
+          break
+        case 'estoque':
+          // Placeholder para futuras funcionalidades de estoque
+          console.log('Atualizando dados do estoque...')
+          break
+        case 'retornos':
+          // Placeholder para futuras funcionalidades de retornos
+          console.log('Atualizando dados dos retornos...')
+          break
+        default:
+          console.log('Seção não implementada para atualização')
+      }
+      
+    } catch (err) {
+      console.error('Erro ao atualizar dados:', err)
+      setError(`Erro ao atualizar dados da seção ${activeSection}`)
+    } finally {
+      setAtualizandoDados(false)
+    }
+  }
 
   return (
     <div className="app-container">
@@ -657,6 +1221,17 @@ function App() {
             <span className="nav-label">{item.label}</span>
           </button>
         ))}
+        
+        {/* Botão de Atualização */}
+        <button
+          className="nav-button refresh-nav-button"
+          onClick={atualizarDadosSecaoAtual}
+          disabled={atualizandoDados}
+          title={atualizandoDados ? "Atualizando dados..." : "Atualizar dados da seção atual"}
+        >
+          <i className={`nav-icon bi bi-arrow-clockwise ${atualizandoDados ? 'spin' : ''}`}></i>
+          <span className="nav-label">Atualizar</span>
+        </button>
       </nav>
 
       {/* Main Content */}
@@ -760,12 +1335,6 @@ function App() {
                       
                       {!loading && !error && (
                         <table className="inventory-table">
-                          <thead>
-                            <tr>
-                              <th>Equipamento</th>
-                              <th>Qtde</th>
-                            </tr>
-                          </thead>
                           <tbody>
                             {equipamentosAguardandoEntrada.length > 0 ? (
                               equipamentosAguardandoEntrada.map((item, index) => (
@@ -797,24 +1366,119 @@ function App() {
 
               <div className="kanban-column">
                 <div className="column-header">
-                  <h3>Aguardando revisão</h3>
-                  <span className="column-count">(2)</span>
-                </div>
-                <div className="column-content">
-                  <div className="kanban-card">
-                    <div className="card-title">EQ-008</div>
-                    <div className="card-description">Smartphone - Bateria viciada</div>
-                    <div className="card-meta">
-                      <span className="card-date">1 dia atrás</span>
-                      <span className="card-priority medium">Normal</span>
+                  <div className="header-left">
+                    <h3>Aguardando revisão</h3>
+                    <div className="filter-button-wrapper">
+                      <button 
+                        className={`filter-hierarchy-button ${filtroAtivo ? 'active' : ''}`}
+                        onClick={abrirFiltroHierarquico}
+                        title="Filtrar por marca e subgrupo"
+                      >
+                        <i className="bi bi-funnel"></i>
+                        {filtroAtivo && <span className="filter-indicator"></span>}
+                      </button>
+                      
+                      {/* Dropdown de Filtro Hierárquico */}
+                      {filtroHierarquicoAberto && (
+                        <div className="filter-dropdown">
+                          <div className="filter-dropdown-header">
+                            <i className="bi bi-funnel"></i>
+                            Filtrar por Marca e Subgrupo
+                          </div>
+
+                          <div className="filter-dropdown-body">
+                            <div className="filter-tree">
+                              {dadosFiltro.marcas.length > 0 ? (
+                                dadosFiltro.marcas.map((marca, indexMarca) => (
+                                  <div key={indexMarca} className="filter-group">
+                                    {/* Checkbox da Marca (Nível 1) */}
+                                    <div className="filter-level-1">
+                                      <label className="filter-checkbox-label">
+                                        <input
+                                          type="checkbox"
+                                          checked={filtrosMarcaSelecionadas.has(marca.nome)}
+                                          onChange={() => toggleMarcaFiltro(marca.nome)}
+                                          className="filter-checkbox"
+                                        />
+                                        <i className="bi bi-bookmark-fill"></i>
+                                        <span className="filter-text">{marca.nome}</span>
+                                        <span className="filter-count">({marca.subgrupos.length})</span>
+                                      </label>
+                                    </div>
+
+                                    {/* Subgrupos (Nível 2) */}
+                                    <div className="filter-level-2">
+                                      {marca.subgrupos.map((subgrupo, indexSub) => (
+                                        <label key={indexSub} className="filter-checkbox-label subgroup">
+                                          <input
+                                            type="checkbox"
+                                            checked={filtrosSubgrupoSelecionados.has(`${marca.nome}|${subgrupo.nome}`)}
+                                            onChange={() => toggleSubgrupoFiltro(marca.nome, subgrupo.nome)}
+                                            className="filter-checkbox"
+                                          />
+                                          <i className="bi bi-tag-fill"></i>
+                                          <span className="filter-text">{subgrupo.nome}</span>
+                                        </label>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="no-data">
+                                  <i className="bi bi-funnel-x"></i>
+                                  <span>Nenhum dado disponível para filtrar</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="filter-dropdown-footer">
+                            <button 
+                              className="clear"
+                              onClick={limparFiltroHierarquico}
+                            >
+                              Limpar
+                            </button>
+                            <button 
+                              className="primary"
+                              onClick={aplicarFiltroHierarquico}
+                            >
+                              Aplicar
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="kanban-card">
-                    <div className="card-title">EQ-012</div>
-                    <div className="card-description">Tablet - Touch não funciona</div>
-                    <div className="card-meta">
-                      <span className="card-date">4 horas atrás</span>
-                      <span className="card-priority high">Urgente</span>
+                  <span className="column-count"><strong>{totalQuantidadeRevisao}</strong></span>
+                </div>
+                <div className="column-content">
+                  <div className="kanban-card inventory-card">
+                    <div className="inventory-table-container">
+                      <table className="inventory-table">
+                        <tbody>
+                          {equipamentosAguardandoRevisao.length > 0 ? (
+                            equipamentosAguardandoRevisao.map((item, index) => (
+                              <tr 
+                                key={index} 
+                                className="clickable-row"
+                                onClick={() => abrirModalDetalhesRevisao(item.equipamento)}
+                                title="Clique para ver detalhes"
+                              >
+                                <td>{item.equipamento || 'N/A'}</td>
+                                <td><span className="quantity-badge">{item.quantidade}</span></td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="2" className="no-data">
+                                <i className="bi bi-inbox"></i>
+                                <span>Nenhum equipamento aguardando revisão</span>
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 </div>
@@ -919,7 +1583,7 @@ function App() {
             <div className="modal-header">
               <div className="modal-header-content">
                 <div className="modal-title-section">
-                  <h2>Equipamentos retornados sem entrada de nota fiscal</h2>
+                  <h2>{modalTeste ? 'Equipamentos aguardando revisão técnica' : 'Equipamentos retornados sem entrada de nota fiscal'}</h2>
                   <div className="modal-subtitle">
                     <strong>Equipamento:</strong> {equipamentoSelecionado}
                   </div>
@@ -957,6 +1621,12 @@ function App() {
                           <i className="bi bi-file-earmark-pdf"></i>
                           Exportar PDF
                         </div>
+                        {modalTeste && (
+                          <div className="options-menu-item" onClick={ativarModoSelecao}>
+                            <i className="bi bi-arrow-right-circle"></i>
+                            Direcionar ordem de serviço
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -982,22 +1652,49 @@ function App() {
                   <table className="details-table">
                     <thead>
                       <tr>
-                        <th>Nota Fiscal</th>
-                        <th>Pedido</th>
-                        <th>Número de Série</th>
-                        <th>Motivo</th>
-                        <th 
-                          className="sortable-header"
-                          onClick={alternarOrdenacao}
-                          title="Clique para ordenar por data"
-                        >
-                          Recebimento
-                          {ordenacao.campo === 'dtreceb' && (
-                            <i className={`bi ${ordenacao.direcao === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down'} sort-icon`}></i>
-                          )}
-                        </th>
-                        <th>Cabo</th>
-                        <th>Conferente</th>
+                        {modalTeste ? (
+                          // Cabeçalhos para Aguardando Revisão
+                          <>
+                            {modoSelecaoAtivo && (
+                              <th style={{ width: '40px', textAlign: 'center' }}>
+                                <input
+                                  type="checkbox"
+                                  checked={selecionarTodos}
+                                  onChange={toggleSelecionarTodos}
+                                  title="Selecionar todos"
+                                />
+                              </th>
+                            )}
+                            <th>Código</th>
+                            <th>Número de Série</th>
+                            <th>Ordem de Serviço</th>
+                            <th>Data de Abertura</th>
+                            <th style={{ textAlign: 'center' }}>Últ. Cont. PB</th>
+                            <th style={{ textAlign: 'center' }}>Últ. Cont. Cor</th>
+                            <th style={{ textAlign: 'center' }}>Fech. c/ peça</th>
+                            <th style={{ textAlign: 'center' }}>Fech. c/ troca</th>
+                          </>
+                        ) : (
+                          // Cabeçalhos para Aguardando Entrada
+                          <>
+                            <th>Nota Fiscal</th>
+                            <th>Pedido</th>
+                            <th>Número de Série</th>
+                            <th>Motivo</th>
+                            <th 
+                              className="sortable-header"
+                              onClick={alternarOrdenacao}
+                              title="Clique para ordenar por data"
+                            >
+                              Recebimento
+                              {ordenacao.campo === 'dtreceb' && (
+                                <i className={`bi ${ordenacao.direcao === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down'} sort-icon`}></i>
+                              )}
+                            </th>
+                            <th>Cabo</th>
+                            <th>Conferente</th>
+                          </>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
@@ -1005,21 +1702,47 @@ function App() {
                         obterDadosProcessados().map((item, index) => (
                           <tr 
                             key={index}
-                            onContextMenu={(e) => handleContextMenu(e, item)}
+                            onContextMenu={(e) => handleContextMenu(e, item, modalTeste)}
                             style={{ cursor: 'context-menu' }}
                           >
-                            <td>{item.ntfisc || 'N/A'}</td>
-                            <td>{item.pedido || 'N/A'}</td>
-                            <td>{item.serie || 'N/A'}</td>
-                            <td>{item.motivoret || 'N/A'}</td>
-                            <td>{formatarData(item.dtreceb)}</td>
-                            <td>{item.Cabo || 'N/A'}</td>
-                            <td>{item.Conferente || 'N/A'}</td>
+                            {modalTeste ? (
+                              // Dados para Aguardando Revisão
+                              <>
+                                {modoSelecaoAtivo && (
+                                  <td style={{ textAlign: 'center' }}>
+                                    <input
+                                      type="checkbox"
+                                      checked={registrosSelecionados.has(index)}
+                                      onChange={() => toggleSelecionarRegistro(index)}
+                                    />
+                                  </td>
+                                )}
+                                <td>{item.codprod || ''}</td>
+                                <td>{item.serie || ''}</td>
+                                <td>{item.OS_REVISAO || ''}</td>
+                                <td>{formatarDataHora(item.OS_REVISAO_DATA)}</td>
+                                <td style={{ textAlign: 'center' }}>{formatarNumero(item.ULT_CONTADOR_PB)}</td>
+                                <td style={{ textAlign: 'center' }}>{formatarNumero(item.ULT_CONTADOR_COR)}</td>
+                                <td style={{ textAlign: 'center' }}>{item.QTDE_OS_PECA || ''}</td>
+                                <td style={{ textAlign: 'center' }}>{item.QTDE_OS_TROCA || ''}</td>
+                              </>
+                            ) : (
+                              // Dados para Aguardando Entrada
+                              <>
+                                <td>{item.ntfisc || 'N/A'}</td>
+                                <td>{item.pedido || 'N/A'}</td>
+                                <td>{item.serie || 'N/A'}</td>
+                                <td>{item.motivoret || 'N/A'}</td>
+                                <td>{formatarData(item.dtreceb)}</td>
+                                <td>{item.Cabo || 'N/A'}</td>
+                                <td>{item.Conferente || 'N/A'}</td>
+                              </>
+                            )}
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="7" className="no-data">
+                          <td colSpan={modalTeste ? (modoSelecaoAtivo ? "9" : "8") : "7"} className="no-data">
                             <i className="bi bi-inbox"></i>
                             <span>
                               {filtroModal.trim() 
@@ -1041,9 +1764,22 @@ function App() {
                 <i className="bi bi-list-ol"></i>
                 <span>Total de equipamentos: <strong>{calcularTotalEquipamentos()}</strong></span>
               </div>
-              <button className="modal-close-btn" onClick={fecharModal}>
-                <i className="bi bi-x-circle"></i> Sair
-              </button>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                {modalTeste && modoSelecaoAtivo && registrosSelecionados.size > 0 && (
+                  <button 
+                    className="modal-close-btn modal-direcionar-btn"
+                    style={{ backgroundColor: '#e9ffdb', color: '#007f66', border: '1px solid #007f66' }}
+                    title="Direcionar ordens de serviço selecionadas"
+                    onClick={abrirModalTecnico}
+                  >
+                    <i className="bi bi-arrow-right-circle"></i>
+                    Direcionar ordens de serviço ({registrosSelecionados.size})
+                  </button>
+                )}
+                <button className="modal-close-btn" onClick={fecharModal}>
+                  <i className="bi bi-x-circle"></i> Sair
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1060,7 +1796,7 @@ function App() {
             >
               <div 
                 className="context-menu-item"
-                onClick={() => handleHistoricoOrdens(contextMenu.item)}
+                onClick={() => contextMenu.isTeste ? handleHistoricoOrdensRevisao(contextMenu.item) : handleHistoricoOrdens(contextMenu.item)}
               >
                 <i className="bi bi-clock-history"></i>
                 Histórico de ordens de serviço
@@ -1178,6 +1914,17 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Modal de Seleção de Técnico */}
+      {modalTecnicoAberto && (
+        <ModalSelecaoTecnico
+          isOpen={modalTecnicoAberto}
+          onClose={fecharModalTecnico}
+          ordensServico={obterRegistrosSelecionados().map(item => item.OS_REVISAO).filter(Boolean)}
+          onSucesso={handleSucessoDirecionamento}
+        />
+      )}
+
     </div>
   )
 }

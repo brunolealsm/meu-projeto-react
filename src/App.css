@@ -18,11 +18,12 @@
 .app-header {
   background: #ffffff;
   border-bottom: 1px solid #e0e0e0;
-  padding: 1rem 2rem;
+  padding: 0.75rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  font-family: 'Nunito Sans', sans-serif;
 }
 
 .logo h1 {
@@ -31,6 +32,7 @@
   color: #333;
   margin: 0;
   line-height: 1;
+  font-family: 'Nunito Sans', sans-serif;
 }
 
 .header-actions {
@@ -69,6 +71,7 @@
   display: flex;
   gap: 0.5rem;
   overflow-x: auto;
+  font-family: 'Nunito', sans-serif;
 }
 
 .nav-button {
@@ -76,7 +79,7 @@
   flex-direction: row;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
+  padding: 0.625rem 1.25rem;
   background: none;
   border: none;
   color: #666;
@@ -87,6 +90,7 @@
   border-bottom: 3px solid transparent;
   min-width: auto;
   position: relative;
+  font-family: 'Nunito', sans-serif;
 }
 
 .nav-button:hover {
@@ -114,6 +118,8 @@
   font-size: 0.875rem;
   text-align: left;
   white-space: nowrap;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 500;
 }
 
 /* Main Content */
@@ -129,7 +135,7 @@
 /* Content Area */
 .content-area {
   flex: 1;
-  padding: 2rem;
+  padding: 1.3rem;
   overflow-y: auto;
   background: #fafafa;
 }
@@ -345,20 +351,17 @@
   height: calc(100vh - 140px);
   overflow-x: auto;
   padding-bottom: 1rem;
+  position: relative;
 }
 
 .kanban-column {
-  flex: 0 0 300px;
+  flex: 0 0 350px;
   background: #f8f9fa;
   border-radius: 12px;
   border: 1px solid #e0e0e0;
   display: flex;
   flex-direction: column;
   max-height: 100%;
-}
-
-.kanban-column:first-child {
-  flex: 0 0 350px;
 }
 
 .column-header {
@@ -376,6 +379,13 @@
   font-weight: 600;
   color: #333;
   margin: 0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
 }
 
 .column-count {
@@ -1168,13 +1178,14 @@
   }
   
   .content-area {
-    padding: 1.5rem;
+    padding: 1rem;
   }
 }
 
 @media (max-width: 768px) {
   .app-header {
-    padding: 1rem;
+    padding: 0.75rem;
+    font-family: 'Nunito Sans', sans-serif;
   }
   
   .horizontal-nav {
@@ -1184,18 +1195,20 @@
   
      .nav-button {
      min-width: auto;
-     padding: 0.6rem 0.75rem;
+     padding: 0.5rem 0.75rem;
      font-size: 0.8rem;
+     font-family: 'Nunito', sans-serif;
    }
    
    .nav-label {
      font-size: 0.75rem;
+     font-family: 'Nunito', sans-serif;
    }
   
   
   
   .content-area {
-    padding: 1rem;
+    padding: 0.65rem;
   }
   
   .status-cards {
@@ -1219,6 +1232,7 @@
   
      .header-actions {
      gap: 0.5rem;
+     font-family: 'Nunito Sans', sans-serif;
    }
   
   .dashboard-widgets {
@@ -1241,8 +1255,9 @@
   }
   
      .nav-button {
-     padding: 0.5rem 0.4rem;
+     padding: 0.4rem 0.4rem;
      gap: 0.4rem;
+     font-family: 'Nunito', sans-serif;
    }
    
    .nav-button .nav-icon {
@@ -1258,10 +1273,6 @@
    }
 
    .kanban-column {
-     flex: 0 0 250px;
-   }
-
-   .kanban-column:first-child {
      flex: 0 0 280px;
    }
 
@@ -1441,6 +1452,32 @@
   font-size: 0.875rem;
 }
 
+/* Estilo para checkbox de seleção na tabela */
+.details-table tbody td input[type="checkbox"],
+.details-table thead th input[type="checkbox"] {
+  cursor: pointer;
+  transform: scale(1.1);
+  accent-color: #3b82f6;
+  filter: grayscale(0.8);
+}
+
+.details-table tbody td input[type="checkbox"]:checked,
+.details-table thead th input[type="checkbox"]:checked {
+  filter: grayscale(0);
+}
+
+.details-table tbody td input[type="checkbox"]:hover,
+.details-table thead th input[type="checkbox"]:hover {
+  transform: scale(1.2);
+}
+
+/* Estilo específico para o botão de direcionar */
+.modal-direcionar-btn:hover {
+  background: #d4f0c7 !important;
+  border-color: #005a4a !important;
+  color: #005a4a !important;
+}
+
 /* Responsive para modal de histórico */
 @media (max-width: 768px) {
   .modal-info-line {
@@ -1470,4 +1507,354 @@
     padding: 0.3rem 0.6rem;
     font-size: 0.7rem;
   }
+}
+
+/* Filtro Hierárquico */
+.filter-button-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.filter-hierarchy-button {
+  width: 28px;
+  height: 28px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  color: #6c757d;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.filter-hierarchy-button:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+  color: #495057;
+}
+
+.filter-hierarchy-button.active {
+  background: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
+.filter-hierarchy-button i {
+  font-size: 12px;
+}
+
+.filter-indicator {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  background: #dc3545;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+/* Dropdown de Filtro Hierárquico */
+.filter-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0; /* Alinha à direita do botão */
+  z-index: 1000;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 320px;
+  max-width: 400px;
+  max-height: 450px;
+  overflow: hidden;
+  animation: dropdownAppear 0.2s ease-out;
+}
+
+/* Ajuste para evitar que o dropdown saia da tela em mobile */
+@media (max-width: 768px) {
+  .filter-dropdown {
+    right: -280px; /* Move para não sair da tela */
+    min-width: 280px;
+  }
+}
+
+@keyframes dropdownAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filter-dropdown-header {
+  padding: 16px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f8f9fa;
+  font-weight: 600;
+  font-size: 12px;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-dropdown-body {
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.filter-dropdown-footer {
+  padding: 12px 16px;
+  border-top: 1px solid #e0e0e0;
+  background: #f8f9fa;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.filter-dropdown-footer button {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.filter-dropdown-footer button:hover {
+  background: #f0f0f0;
+}
+
+.filter-dropdown-footer button.primary {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.filter-dropdown-footer button.primary:hover {
+  background: #0056b3;
+}
+
+.filter-dropdown-footer button.clear {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.filter-dropdown-footer button.clear:hover {
+  background: #f8d7da;
+}
+
+.filter-tree {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 0.4rem 0;
+}
+
+.filter-tree::-webkit-scrollbar {
+  width: 6px;
+}
+
+.filter-tree::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.filter-tree::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.filter-tree::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.filter-group {
+  margin-bottom: 0.8rem;
+}
+
+.filter-level-1 {
+  border-left: 3px solid #007bff;
+  padding-left: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.filter-level-2 {
+  margin-left: 1.2rem;
+  border-left: 2px solid #e9ecef;
+  padding-left: 0.6rem;
+}
+
+.filter-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  text-align: left;
+}
+
+.filter-checkbox-label:hover {
+  background: #f8f9fa;
+}
+
+.filter-checkbox-label.subgroup {
+  margin-left: 0;
+  font-size: 0.9rem;
+}
+
+.filter-checkbox {
+  width: 14px;
+  height: 14px;
+  accent-color: #007bff;
+  cursor: pointer;
+}
+
+.filter-text {
+  flex: 1;
+  font-weight: 500;
+  color: #495057;
+  font-size: 10px;
+  text-align: left;
+}
+
+.filter-checkbox-label.subgroup .filter-text {
+  font-weight: 400;
+  color: #6c757d;
+  font-size: 10px;
+  text-align: left;
+}
+
+.filter-count {
+  font-size: 10px;
+  color: #6c757d;
+  background: #e9ecef;
+  padding: 0.15rem 0.3rem;
+  border-radius: 4px;
+}
+
+.filter-checkbox-label i {
+  color: #007bff;
+}
+
+.filter-checkbox-label.subgroup i {
+  color: #6c757d;
+}
+
+.filter-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.btn-primary {
+  background: #007bff !important;
+  border-color: #007bff !important;
+  color: white !important;
+}
+
+.btn-primary:hover {
+  background: #0056b3 !important;
+  border-color: #0056b3 !important;
+}
+
+.btn-secondary {
+  background: #6c757d !important;
+  border-color: #6c757d !important;
+  color: white !important;
+}
+
+.btn-secondary:hover {
+  background: #5a6268 !important;
+  border-color: #5a6268 !important;
+}
+
+@media (max-width: 768px) {
+  .filter-level-2 {
+    margin-left: 0.8rem;
+  }
+  
+  .filter-hierarchy-button {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .filter-hierarchy-button i {
+    font-size: 12px;
+  }
+}
+
+/* Responsividade para mobile */
+@media (max-width: 768px) {
+  .filter-hierarchy-button {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+  
+  .filter-dropdown {
+    width: 280px;
+    max-height: 400px;
+  }
+  
+  .kanban-board {
+    flex-direction: column;
+  }
+  
+  .kanban-column {
+    min-width: auto;
+  }
+  
+  .modal-content {
+    width: 95%;
+    height: 90%;
+  }
+  
+  .modal-table-container {
+    font-size: 12px;
+  }
+  
+  .modal-table th,
+  .modal-table td {
+    padding: 6px;
+    font-size: 11px;
+  }
+}
+
+/* Botão de Atualização no Menu */
+.refresh-nav-button {
+  margin-left: auto;
+}
+
+.refresh-nav-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.refresh-nav-button:disabled:hover {
+  background: #f8f9fa;
+  color: #6c757d;
+  transform: none;
+}
+
+.refresh-nav-button i.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 } 

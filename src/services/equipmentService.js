@@ -86,6 +86,49 @@ export const testarConexaoBanco = async () => {
 };
 
 /**
+ * Buscar todos os equipamentos aguardando revisão
+ * Consome a API REST do backend que executa a query SQL
+ */
+export const getEquipamentosAguardandoRevisao = async () => {
+  try {
+    const response = await fetchApi('/equipment/aguardando-revisao');
+    return response.data || [];
+  } catch (error) {
+    console.error('Erro ao buscar equipamentos aguardando revisão:', error);
+    throw error;
+  }
+};
+
+/**
+ * Buscar dados detalhados dos equipamentos aguardando revisão
+ * Consome a API REST do backend
+ */
+export const getDadosDetalhadosAguardandoRevisao = async () => {
+  try {
+    const response = await fetchApi('/equipment/aguardando-revisao/detalhes');
+    return response.data || [];
+  } catch (error) {
+    console.error('Erro ao buscar dados detalhados aguardando revisão:', error);
+    throw error;
+  }
+};
+
+/**
+ * Buscar detalhes de um equipamento específico aguardando revisão
+ * @param {string} nomeEquipamento - Nome do equipamento para filtrar
+ */
+export const getDetalhesEquipamentoRevisao = async (nomeEquipamento) => {
+  try {
+    const encodedName = encodeURIComponent(nomeEquipamento);
+    const response = await fetchApi(`/equipment/aguardando-revisao/detalhes/${encodedName}`);
+    return response.data || [];
+  } catch (error) {
+    console.error('Erro ao buscar detalhes do equipamento em revisão:', error);
+    throw error;
+  }
+};
+
+/**
  * Buscar histórico de ordens de serviço por série
  * @param {string} serie - Número de série do equipamento
  */
@@ -100,10 +143,52 @@ export const getHistoricoOrdemServico = async (serie) => {
   }
 };
 
+/**
+ * Buscar técnicos de oficina
+ */
+export const getTecnicosOficina = async () => {
+  try {
+    const response = await fetchApi('/equipment/tecnicos-oficina');
+    return response.data || [];
+  } catch (error) {
+    console.error('Erro ao buscar técnicos de oficina:', error);
+    throw error;
+  }
+};
+
+/**
+ * Direcionar ordens de serviço para um técnico
+ * @param {Array} ordensServico - Array com os números das ordens de serviço
+ * @param {string} codigoTecnico - Código do técnico selecionado
+ */
+export const direcionarOrdensServico = async (ordensServico, codigoTecnico) => {
+  try {
+    const response = await fetchApi('/equipment/direcionar-ordens-servico', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ordensServico,
+        codigoTecnico
+      })
+    });
+    return response.data || response;
+  } catch (error) {
+    console.error('Erro ao direcionar ordens de serviço:', error);
+    throw error;
+  }
+};
+
 export default {
   getEquipamentosAguardandoEntrada,
   getDadosDetalhadosAguardandoEntrada,
+  getEquipamentosAguardandoRevisao,
+  getDadosDetalhadosAguardandoRevisao,
   getDetalhesEquipamento,
+  getDetalhesEquipamentoRevisao,
   testarConexaoBanco,
-  getHistoricoOrdemServico
+  getHistoricoOrdemServico,
+  getTecnicosOficina,
+  direcionarOrdensServico
 }; 
