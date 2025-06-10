@@ -8,7 +8,15 @@ import {
   testarConexaoBanco,
   getHistoricoOrdemServico,
   getTecnicosOficina,
-  direcionarOrdensServico
+  direcionarOrdensServico,
+  getEquipamentosEmServico,
+  getPedidosPendentes,
+  getDetalhesPedido,
+  getPedidosLiberados,
+  getDetalhesPedidoLiberado,
+  getFechamentoOS,
+  getDetalhesFechamentoOS,
+  confirmarRecebimentoPedido
 } from '../services/equipmentService.js';
 
 const router = express.Router();
@@ -43,11 +51,27 @@ router.get('/historico-os/:serie', async (req, res) => {
 // Retorna lista agrupada de equipamentos aguardando entrada
 router.get('/aguardando-entrada', async (req, res) => {
   try {
-    const equipamentos = await getEquipamentosAguardandoEntrada();
+    // Extrair parâmetros de filtro da query string
+    const { marcas, subgrupos } = req.query;
+    
+    // Converter strings em arrays se fornecidas
+    const filtrosMarcas = marcas ? marcas.split(',').filter(m => m.trim()) : [];
+    const filtrosSubgrupos = subgrupos ? subgrupos.split(',').filter(s => s.trim()) : [];
+    
+    console.log('🔍 Filtros aplicados (Aguardando Entrada):', { 
+      marcas: filtrosMarcas, 
+      subgrupos: filtrosSubgrupos 
+    });
+    
+    const equipamentos = await getEquipamentosAguardandoEntrada(filtrosMarcas, filtrosSubgrupos);
     res.json({
       success: true,
       data: equipamentos,
-      total: equipamentos.length
+      total: equipamentos.length,
+      filtrosAplicados: {
+        marcas: filtrosMarcas,
+        subgrupos: filtrosSubgrupos
+      }
     });
   } catch (error) {
     console.error('Erro na rota /aguardando-entrada:', error);
@@ -111,11 +135,27 @@ router.get('/aguardando-entrada/detalhes/:equipamento', async (req, res) => {
 // Retorna lista agrupada de equipamentos aguardando revisão
 router.get('/aguardando-revisao', async (req, res) => {
   try {
-    const equipamentos = await getEquipamentosAguardandoRevisao();
+    // Extrair parâmetros de filtro da query string
+    const { marcas, subgrupos } = req.query;
+    
+    // Converter strings em arrays se fornecidas
+    const filtrosMarcas = marcas ? marcas.split(',').filter(m => m.trim()) : [];
+    const filtrosSubgrupos = subgrupos ? subgrupos.split(',').filter(s => s.trim()) : [];
+    
+    console.log('🔍 Filtros aplicados:', { 
+      marcas: filtrosMarcas, 
+      subgrupos: filtrosSubgrupos 
+    });
+    
+    const equipamentos = await getEquipamentosAguardandoRevisao(filtrosMarcas, filtrosSubgrupos);
     res.json({
       success: true,
       data: equipamentos,
-      total: equipamentos.length
+      total: equipamentos.length,
+      filtrosAplicados: {
+        marcas: filtrosMarcas,
+        subgrupos: filtrosSubgrupos
+      }
     });
   } catch (error) {
     console.error('Erro na rota /aguardando-revisao:', error);
@@ -154,21 +194,21 @@ router.get('/aguardando-revisao/detalhes/:equipamento', async (req, res) => {
     const { equipamento } = req.params;
     console.log(`🔍 Buscando detalhes do equipamento aguardando revisão: ${equipamento}`);
     
-    // Usar função específica que já filtra na consulta SQL
-    const equipamentosFiltrados = await getDetalhesEquipamentoAguardandoRevisao(equipamento);
+    const detalhes = await getDetalhesEquipamentoAguardandoRevisao(equipamento);
     
+    console.log(`✅ Detalhes encontrados para: ${equipamento} - ${detalhes.length} registros`);
     res.json({
       success: true,
-      data: equipamentosFiltrados,
-      total: equipamentosFiltrados.length,
+      data: detalhes,
+      total: detalhes.length,
       equipamento: equipamento
     });
   } catch (error) {
-    console.error('Erro na rota /aguardando-revisao/detalhes/:equipamento:', error);
-    res.status(500).json({
-      success: false,
+    console.error('❌ Erro ao buscar detalhes do equipamento aguardando revisão:', error);
+    res.status(500).json({ 
+      success: false, 
       message: 'Erro interno do servidor',
-      error: error.message
+      error: error.message 
     });
   }
 });
@@ -261,6 +301,217 @@ router.post('/direcionar-ordens-servico', async (req, res) => {
   } catch (error) {
     console.error('❌ Erro na rota de direcionamento:', error);
     console.error('Stack trace:', error.stack);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Erro interno do servidor',
+      error: error.message 
+    });
+  }
+});
+
+// Retorna equipamentos em serviço agrupados por técnico
+router.get('/equipamentos-em-servico', async (req, res) => {
+  try {
+    console.log('🔍 Buscando equipamentos em serviço...');
+    
+    const equipamentos = await getEquipamentosEmServico();
+    
+    console.log(`✅ Equipamentos em serviço encontrados: ${equipamentos.length} técnicos`);
+    res.json(equipamentos);
+  } catch (error) {
+    console.error('❌ Erro ao buscar equipamentos em serviço:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Erro interno do servidor',
+      error: error.message 
+    });
+  }
+});
+
+// GET /api/equipment/pedidos-pendentes
+// Retorna lista de pedidos pendentes (posição de peças)
+router.get('/pedidos-pendentes', async (req, res) => {
+  try {
+    console.log('🔍 Buscando pedidos pendentes...');
+    
+    const pedidos = await getPedidosPendentes();
+    
+    console.log(`✅ Pedidos pendentes encontrados: ${pedidos.length} registros`);
+    res.json({
+      success: true,
+      data: pedidos,
+      total: pedidos.length
+    });
+  } catch (error) {
+    console.error('❌ Erro ao buscar pedidos pendentes:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Erro interno do servidor',
+      error: error.message 
+    });
+  }
+});
+
+// GET /api/equipment/pedidos-pendentes/:codigo
+// Retorna detalhes de um pedido específico
+router.get('/pedidos-pendentes/:codigo', async (req, res) => {
+  try {
+    const { codigo } = req.params;
+    console.log(`🔍 Buscando detalhes do pedido: ${codigo}`);
+    
+    const detalhes = await getDetalhesPedido(codigo);
+    
+    console.log(`✅ Detalhes do pedido ${codigo}: ${detalhes.length} itens`);
+    res.json({
+      success: true,
+      data: detalhes,
+      total: detalhes.length,
+      codigo: codigo
+    });
+  } catch (error) {
+    console.error(`❌ Erro ao buscar detalhes do pedido ${req.params.codigo}:`, error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Erro interno do servidor',
+      error: error.message 
+    });
+  }
+});
+
+// GET /api/equipment/pedidos-liberados
+// Retorna lista de pedidos liberados (posição de peças)
+router.get('/pedidos-liberados', async (req, res) => {
+  try {
+    console.log('🔍 Buscando pedidos liberados...');
+    
+    const pedidos = await getPedidosLiberados();
+    
+    console.log(`✅ Pedidos liberados encontrados: ${pedidos.length} registros`);
+    res.json({
+      success: true,
+      data: pedidos,
+      total: pedidos.length
+    });
+  } catch (error) {
+    console.error('❌ Erro ao buscar pedidos liberados:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Erro interno do servidor',
+      error: error.message 
+    });
+  }
+});
+
+// GET /api/equipment/pedidos-liberados/:codigo
+// Retorna detalhes de um pedido liberado específico
+router.get('/pedidos-liberados/:codigo', async (req, res) => {
+  try {
+    const { codigo } = req.params;
+    console.log(`🔍 Buscando detalhes do pedido liberado: ${codigo}`);
+    
+    const detalhes = await getDetalhesPedidoLiberado(codigo);
+    
+    console.log(`✅ Detalhes do pedido liberado ${codigo}: ${detalhes.length} itens`);
+    res.json({
+      success: true,
+      data: detalhes,
+      total: detalhes.length,
+      codigo: codigo
+    });
+  } catch (error) {
+    console.error(`❌ Erro ao buscar detalhes do pedido liberado ${req.params.codigo}:`, error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Erro interno do servidor',
+      error: error.message 
+    });
+  }
+});
+
+// GET /api/equipment/fechamento-os
+// Retorna lista de ordens de serviço de fechamento agrupadas por técnico
+router.get('/fechamento-os', async (req, res) => {
+  try {
+    console.log('🔍 Buscando dados de fechamento de OS...');
+    
+    const fechamentos = await getFechamentoOS();
+    
+    console.log(`✅ Fechamentos de OS encontrados: ${fechamentos.length} técnicos`);
+    res.json({
+      success: true,
+      data: fechamentos,
+      total: fechamentos.length
+    });
+  } catch (error) {
+    console.error('❌ Erro ao buscar fechamentos de OS:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Erro interno do servidor',
+      error: error.message 
+    });
+  }
+});
+
+// GET /api/equipment/fechamento-os/:codigo
+// Retorna detalhes de uma OS específica de fechamento
+router.get('/fechamento-os/:codigo', async (req, res) => {
+  try {
+    const { codigo } = req.params;
+    console.log(`🔍 Buscando detalhes do fechamento de OS: ${codigo}`);
+    
+    const detalhes = await getDetalhesFechamentoOS(codigo);
+    
+    if (detalhes) {
+      console.log(`✅ Detalhes do fechamento de OS ${codigo} encontrados`);
+      res.json({
+        success: true,
+        data: detalhes,
+        codigo: codigo
+      });
+    } else {
+      console.log(`⚠️ Fechamento de OS ${codigo} não encontrado`);
+      res.status(404).json({
+        success: false,
+        message: 'Fechamento de OS não encontrado',
+        codigo: codigo
+      });
+    }
+  } catch (error) {
+    console.error(`❌ Erro ao buscar detalhes do fechamento de OS ${req.params.codigo}:`, error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Erro interno do servidor',
+      error: error.message 
+    });
+  }
+});
+
+// POST /api/equipment/pedidos-liberados/:codigo/confirmar-recebimento
+// Confirma o recebimento de um pedido liberado
+router.post('/pedidos-liberados/:codigo/confirmar-recebimento', async (req, res) => {
+  try {
+    const { codigo } = req.params;
+    console.log(`🔍 Confirmando recebimento do pedido: ${codigo}`);
+    
+    const resultado = await confirmarRecebimentoPedido(codigo);
+    
+    if (resultado.sucesso) {
+      console.log(`✅ Recebimento do pedido ${codigo} confirmado com sucesso`);
+      res.json({
+        success: true,
+        data: resultado.dados,
+        message: resultado.mensagem
+      });
+    } else {
+      console.log(`⚠️ Erro ao confirmar recebimento do pedido ${codigo}`);
+      res.status(400).json({
+        success: false,
+        message: resultado.mensagem,
+        error: resultado.erro
+      });
+    }
+  } catch (error) {
+    console.error(`❌ Erro na rota de confirmação de recebimento do pedido ${req.params.codigo}:`, error);
     res.status(500).json({ 
       success: false, 
       message: 'Erro interno do servidor',

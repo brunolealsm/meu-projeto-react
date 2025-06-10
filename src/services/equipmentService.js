@@ -29,10 +29,26 @@ const fetchApi = async (endpoint, options = {}) => {
 /**
  * Buscar todos os equipamentos aguardando entrada
  * Consome a API REST do backend que executa a query SQL
+ * @param {Array} filtrosMarcas - Array de marcas selecionadas para filtro
+ * @param {Array} filtrosSubgrupos - Array de subgrupos selecionados para filtro
  */
-export const getEquipamentosAguardandoEntrada = async () => {
+export const getEquipamentosAguardandoEntrada = async (filtrosMarcas = [], filtrosSubgrupos = []) => {
   try {
-    const response = await fetchApi('/equipment/aguardando-entrada');
+    // Construir query string com filtros
+    const params = new URLSearchParams();
+    
+    if (filtrosMarcas.length > 0) {
+      params.append('marcas', filtrosMarcas.join(','));
+    }
+    
+    if (filtrosSubgrupos.length > 0) {
+      params.append('subgrupos', filtrosSubgrupos.join(','));
+    }
+    
+    const queryString = params.toString();
+    const url = queryString ? `/equipment/aguardando-entrada?${queryString}` : '/equipment/aguardando-entrada';
+    
+    const response = await fetchApi(url);
     return response.data || [];
   } catch (error) {
     console.error('Erro ao buscar equipamentos aguardando entrada:', error);
@@ -88,10 +104,26 @@ export const testarConexaoBanco = async () => {
 /**
  * Buscar todos os equipamentos aguardando revisão
  * Consome a API REST do backend que executa a query SQL
+ * @param {Array} filtrosMarcas - Array de marcas selecionadas para filtro
+ * @param {Array} filtrosSubgrupos - Array de subgrupos selecionados para filtro
  */
-export const getEquipamentosAguardandoRevisao = async () => {
+export const getEquipamentosAguardandoRevisao = async (filtrosMarcas = [], filtrosSubgrupos = []) => {
   try {
-    const response = await fetchApi('/equipment/aguardando-revisao');
+    // Construir query string com filtros
+    const params = new URLSearchParams();
+    
+    if (filtrosMarcas.length > 0) {
+      params.append('marcas', filtrosMarcas.join(','));
+    }
+    
+    if (filtrosSubgrupos.length > 0) {
+      params.append('subgrupos', filtrosSubgrupos.join(','));
+    }
+    
+    const queryString = params.toString();
+    const url = queryString ? `/equipment/aguardando-revisao?${queryString}` : '/equipment/aguardando-revisao';
+    
+    const response = await fetchApi(url);
     return response.data || [];
   } catch (error) {
     console.error('Erro ao buscar equipamentos aguardando revisão:', error);
@@ -157,25 +189,157 @@ export const getTecnicosOficina = async () => {
 };
 
 /**
- * Direcionar ordens de serviço para um técnico
- * @param {Array} ordensServico - Array com os números das ordens de serviço
- * @param {string} codigoTecnico - Código do técnico selecionado
+ * Direcionar ordens de serviço para técnico
  */
 export const direcionarOrdensServico = async (ordensServico, codigoTecnico) => {
   try {
-    const response = await fetchApi('/equipment/direcionar-ordens-servico', {
+    const response = await fetch('/api/equipment/direcionar-ordens-servico', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         ordensServico,
         codigoTecnico
       })
     });
-    return response.data || response;
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Erro ao direcionar ordens de serviço');
+    }
+
+    return await response.json();
   } catch (error) {
     console.error('Erro ao direcionar ordens de serviço:', error);
+    throw error;
+  }
+};
+
+/**
+ * Buscar equipamentos em serviço agrupados por técnico
+ */
+export const getEquipamentosEmServico = async () => {
+  try {
+    const response = await fetch('http://localhost:3001/api/equipment/equipamentos-em-servico');
+    
+    if (!response.ok) {
+      throw new Error('Erro ao buscar equipamentos em serviço');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Erro ao buscar equipamentos em serviço:', error);
+    throw error;
+  }
+};
+
+/**
+ * Buscar pedidos pendentes (posição de peças)
+ */
+export const getPedidosPendentes = async () => {
+  try {
+    const response = await fetchApi('/equipment/pedidos-pendentes');
+    return response.data || [];
+  } catch (error) {
+    console.error('Erro ao buscar pedidos pendentes:', error);
+    throw error;
+  }
+};
+
+/**
+ * Buscar detalhes de um pedido específico
+ * @param {string} codigo - Código do pedido
+ */
+export const getDetalhesPedido = async (codigo) => {
+  try {
+    const encodedCodigo = encodeURIComponent(codigo);
+    const response = await fetchApi(`/equipment/pedidos-pendentes/${encodedCodigo}`);
+    return response.data || [];
+  } catch (error) {
+    console.error(`Erro ao buscar detalhes do pedido ${codigo}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Buscar pedidos liberados (posição de peças)
+ */
+export const getPedidosLiberados = async () => {
+  try {
+    const response = await fetchApi('/equipment/pedidos-liberados');
+    return response.data || [];
+  } catch (error) {
+    console.error('Erro ao buscar pedidos liberados:', error);
+    throw error;
+  }
+};
+
+/**
+ * Buscar detalhes de um pedido liberado específico
+ * @param {string} codigo - Código do pedido liberado
+ */
+export const getDetalhesPedidoLiberado = async (codigo) => {
+  try {
+    const encodedCodigo = encodeURIComponent(codigo);
+    const response = await fetchApi(`/equipment/pedidos-liberados/${encodedCodigo}`);
+    return response.data || [];
+  } catch (error) {
+    console.error(`Erro ao buscar detalhes do pedido liberado ${codigo}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Buscar dados de fechamento de OS agrupados por técnico
+ */
+export const getFechamentoOS = async () => {
+  try {
+    const response = await fetchApi('/equipment/fechamento-os');
+    return response.data || [];
+  } catch (error) {
+    console.error('Erro ao buscar fechamentos de OS:', error);
+    throw error;
+  }
+};
+
+/**
+ * Buscar detalhes de um fechamento de OS específico
+ * @param {string} codigo - Código da OS de fechamento
+ */
+export const getDetalhesFechamentoOS = async (codigo) => {
+  try {
+    const encodedCodigo = encodeURIComponent(codigo);
+    const response = await fetchApi(`/equipment/fechamento-os/${encodedCodigo}`);
+    return response.data || null;
+  } catch (error) {
+    console.error(`Erro ao buscar detalhes do fechamento de OS ${codigo}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Confirmar recebimento de pedido liberado
+ * @param {string} codigo - Código do pedido liberado
+ */
+export const confirmarRecebimentoPedido = async (codigo) => {
+  try {
+    const encodedCodigo = encodeURIComponent(codigo);
+    const response = await fetch(`http://localhost:3001/api/equipment/pedidos-liberados/${encodedCodigo}/confirmar-recebimento`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Erro ao confirmar recebimento do pedido');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(`Erro ao confirmar recebimento do pedido ${codigo}:`, error);
     throw error;
   }
 };
@@ -190,5 +354,13 @@ export default {
   testarConexaoBanco,
   getHistoricoOrdemServico,
   getTecnicosOficina,
-  direcionarOrdensServico
+  direcionarOrdensServico,
+  getEquipamentosEmServico,
+  getPedidosPendentes,
+  getDetalhesPedido,
+  getPedidosLiberados,
+  getDetalhesPedidoLiberado,
+  getFechamentoOS,
+  getDetalhesFechamentoOS,
+  confirmarRecebimentoPedido
 }; 
