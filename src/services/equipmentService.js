@@ -193,7 +193,9 @@ export const getTecnicosOficina = async () => {
  */
 export const direcionarOrdensServico = async (ordensServico, codigoTecnico) => {
   try {
-    const response = await fetch('/api/equipment/direcionar-ordens-servico', {
+    console.log('🚀 Enviando requisição para direcionar ordens:', { ordensServico, codigoTecnico });
+    
+    const response = await fetch('http://localhost:3001/api/equipment/direcionar-ordens-servico', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -204,14 +206,27 @@ export const direcionarOrdensServico = async (ordensServico, codigoTecnico) => {
       })
     });
 
+    console.log('📡 Resposta recebida:', response.status, response.statusText);
+
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Erro ao direcionar ordens de serviço');
+      // Se a resposta não for OK, tentar ler como texto primeiro para debug
+      const errorText = await response.text();
+      console.error('❌ Erro na resposta (texto):', errorText);
+      
+      // Tentar fazer parse do JSON se possível
+      try {
+        const errorData = JSON.parse(errorText);
+        throw new Error(errorData.message || 'Erro ao direcionar ordens de serviço');
+      } catch (parseError) {
+        throw new Error(`Erro no servidor (${response.status}): ${errorText || response.statusText}`);
+      }
     }
 
-    return await response.json();
+    const result = await response.json();
+    console.log('✅ Resultado do direcionamento:', result);
+    return result;
   } catch (error) {
-    console.error('Erro ao direcionar ordens de serviço:', error);
+    console.error('❌ Erro ao direcionar ordens de serviço:', error);
     throw error;
   }
 };

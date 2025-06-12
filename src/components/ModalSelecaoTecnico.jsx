@@ -74,21 +74,28 @@ const ModalSelecaoTecnico = ({
       }]);
 
       const resultado = await direcionarOrdensServico(ordensServico, tecnicoSelecionado);
+      
+      console.log('✅ Resultado recebido do direcionamento:', resultado);
 
-      if (resultado.sucesso) {
+      // O backend retorna { success: true, data: { sucesso: true, resultados: [...] } }
+      const dadosResultado = resultado.data || resultado;
+
+      if (resultado && resultado.success && dadosResultado && dadosResultado.sucesso) {
         // Mostrar progresso de sucesso
         setProgresso(prev => [...prev, {
           tipo: 'sucesso',
-          mensagem: resultado.mensagem
+          mensagem: dadosResultado.mensagem || resultado.message || 'Direcionamento realizado com sucesso'
         }]);
 
-        // Mostrar detalhes dos resultados
-        resultado.resultados.forEach(res => {
-          setProgresso(prev => [...prev, {
-            tipo: res.status === 'sucesso' ? 'sucesso' : 'erro',
-            mensagem: `OS ${res.ordemServico}: ${res.mensagem}`
-          }]);
-        });
+        // Mostrar detalhes dos resultados - com verificação de segurança
+        if (dadosResultado.resultados && Array.isArray(dadosResultado.resultados)) {
+          dadosResultado.resultados.forEach(res => {
+            setProgresso(prev => [...prev, {
+              tipo: res.status === 'sucesso' ? 'sucesso' : 'erro',
+              mensagem: `OS ${res.ordemServico}: ${res.mensagem}`
+            }]);
+          });
+        }
 
         setTimeout(() => {
           onSucesso && onSucesso();
@@ -99,15 +106,18 @@ const ModalSelecaoTecnico = ({
         // Mostrar erros
         setProgresso(prev => [...prev, {
           tipo: 'erro',
-          mensagem: resultado.mensagem
+          mensagem: dadosResultado?.mensagem || resultado?.message || 'Erro desconhecido no direcionamento'
         }]);
 
-        resultado.resultados.forEach(res => {
-          setProgresso(prev => [...prev, {
-            tipo: res.status === 'sucesso' ? 'sucesso' : 'erro',
-            mensagem: `OS ${res.ordemServico}: ${res.mensagem}`
-          }]);
-        });
+        // Mostrar detalhes dos resultados - com verificação de segurança
+        if (dadosResultado && dadosResultado.resultados && Array.isArray(dadosResultado.resultados)) {
+          dadosResultado.resultados.forEach(res => {
+            setProgresso(prev => [...prev, {
+              tipo: res.status === 'sucesso' ? 'sucesso' : 'erro',
+              mensagem: `OS ${res.ordemServico}: ${res.mensagem}`
+            }]);
+          });
+        }
       }
     } catch (error) {
       setProgresso(prev => [...prev, {

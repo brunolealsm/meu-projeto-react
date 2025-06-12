@@ -1,0 +1,344 @@
+.modal-selecao-tecnico {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  z-index: 1001;
+}
+
+.modal-selecao-tecnico .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f8fafc;
+  border-radius: 8px 8px 0 0;
+}
+
+.modal-selecao-tecnico .modal-header h2 {
+  color: #1f2937;
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.modal-selecao-tecnico .close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.modal-selecao-tecnico .close-button:hover:not(:disabled) {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.modal-selecao-tecnico .close-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modal-selecao-tecnico .modal-body {
+  padding: 1.5rem;
+}
+
+.info-section {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: #f0f9ff;
+  border: 1px solid #e0f2fe;
+  border-radius: 6px;
+}
+
+.info-section p {
+  margin: 0 0 1rem 0;
+  color: #0f172a;
+  font-weight: 500;
+}
+
+.ordens-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.ordem-tag {
+  background: #3b82f6;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.tecnico-section h3 {
+  color: #1f2937;
+  margin: 0 0 1rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  justify-content: center;
+  color: #6b7280;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.tecnicos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 0.25rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fafafa;
+}
+
+.tecnico-option {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tecnico-option:hover {
+  background: #f8fafc;
+  border-color: #3b82f6;
+}
+
+.tecnico-option input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #3b82f6;
+}
+
+.tecnico-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.tecnico-info strong {
+  color: #1f2937;
+  font-size: 0.875rem;
+}
+
+.tecnico-info small {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.no-tecnicos {
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+  padding: 2rem;
+}
+
+.error-message {
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #fecaca;
+  margin-top: 1rem;
+  font-size: 0.875rem;
+}
+
+.progresso-section h3 {
+  color: #1f2937;
+  margin: 0 0 1rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.progresso-lista {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fafafa;
+  padding: 1rem;
+}
+
+.progresso-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+}
+
+.progresso-item:last-child {
+  margin-bottom: 0;
+}
+
+.progresso-item.info {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #dbeafe;
+}
+
+.progresso-item.sucesso {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #dcfce7;
+}
+
+.progresso-item.erro {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.progresso-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.loading-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  margin-top: 1rem;
+  color: #6b7280;
+}
+
+.modal-selecao-tecnico .modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  background: #f8fafc;
+  border-radius: 0 0 8px 8px;
+}
+
+.modal-selecao-tecnico .btn-primary,
+.modal-selecao-tecnico .btn-secondary {
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 100px;
+}
+
+.modal-selecao-tecnico .btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.modal-selecao-tecnico .btn-primary:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.modal-selecao-tecnico .btn-primary:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.modal-selecao-tecnico .btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.modal-selecao-tecnico .btn-secondary:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.modal-selecao-tecnico .btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modal-selecao-tecnico {
+    width: 95%;
+    max-height: 90vh;
+  }
+  
+  .modal-selecao-tecnico .modal-header,
+  .modal-selecao-tecnico .modal-body,
+  .modal-selecao-tecnico .modal-footer {
+    padding: 1rem;
+  }
+  
+  .tecnico-option {
+    padding: 0.375rem;
+    gap: 0.25rem;
+  }
+  
+  .tecnicos-lista {
+    gap: 0.25rem;
+    padding: 0.125rem;
+  }
+  
+  .tecnico-info strong {
+    font-size: 0.8125rem;
+  }
+  
+  .ordens-lista {
+    flex-direction: column;
+  }
+  
+  .ordem-tag {
+    align-self: flex-start;
+  }
+  
+  .modal-selecao-tecnico .modal-footer {
+    flex-direction: column-reverse;
+  }
+  
+  .modal-selecao-tecnico .btn-primary,
+  .modal-selecao-tecnico .btn-secondary {
+    width: 100%;
+  }
+} 

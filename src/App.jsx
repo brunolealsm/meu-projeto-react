@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import './App.css'
 import { getEquipamentosAguardandoEntrada, getDetalhesEquipamento, getHistoricoOrdemServico, getEquipamentosAguardandoRevisao, getDetalhesEquipamentoRevisao, getEquipamentosEmServico, getPedidosPendentes, getDetalhesPedido, getPedidosLiberados, getDetalhesPedidoLiberado, getFechamentoOS, getDetalhesFechamentoOS, confirmarRecebimentoPedido } from './services/equipmentService.js'
 import ModalSelecaoTecnico from './components/ModalSelecaoTecnico.jsx'
@@ -6,7 +6,7 @@ import ModalSelecaoTecnico from './components/ModalSelecaoTecnico.jsx'
 // import 'jspdf-autotable'
 
 function App() {
-  const [activeSection, setActiveSection] = useState('dashboard')
+  const [activeSection, setActiveSection] = useState('fila')
   const [equipamentosAguardandoEntrada, setEquipamentosAguardandoEntrada] = useState([])
   const [totalQuantidadeAguardando, setTotalQuantidadeAguardando] = useState(0)
   const [equipamentosAguardandoRevisao, setEquipamentosAguardandoRevisao] = useState([])
@@ -98,7 +98,67 @@ function App() {
   const [modalOSFechamentoAberto, setModalOSFechamentoAberto] = useState(false)
   const [ordemFechamentoSelecionada, setOrdemFechamentoSelecionada] = useState(null)
 
+  // Estados para notificações
+  const [notificacoes, setNotificacoes] = useState([])
+  const [modalNotificacoesAberto, setModalNotificacoesAberto] = useState(false)
+  const [totalNotificacoes, setTotalNotificacoes] = useState(0)
 
+  // Funções para notificações
+  const gerarNotificacoes = useCallback(() => {
+    const novasNotificacoes = []
+    
+    // Notificações de pedidos liberados
+    pedidosLiberados.forEach(pedido => {
+      novasNotificacoes.push({
+        id: `pedido_${pedido.codigo}`,
+        tipo: 'pedido_liberado',
+        titulo: 'Pedido liberado',
+        mensagem: `O pedido peça ${pedido.codigo} liberado!`,
+        timestamp: new Date(),
+        lida: false
+      })
+    })
+    
+    // Notificações de técnicos com OS pendentes para fechamento
+    tecnicosFechamento.forEach(tecnico => {
+      if (tecnico.totalOrdens > 0) {
+        novasNotificacoes.push({
+          id: `tecnico_${tecnico.nome.replace(/\s+/g, '_')}`,
+          tipo: 'os_fechamento',
+          titulo: 'OS pendente para fechamento',
+          mensagem: `${tecnico.nome} possui ${tecnico.totalOrdens} ${tecnico.totalOrdens === 1 ? 'ordem' : 'ordens'} de serviço ${tecnico.totalOrdens === 1 ? 'pendente' : 'pendentes'} para fechamento`,
+          timestamp: new Date(),
+          lida: false
+        })
+      }
+    })
+    
+    setNotificacoes(novasNotificacoes)
+    setTotalNotificacoes(novasNotificacoes.length)
+    
+    console.log('🔔 Notificações geradas:', novasNotificacoes.length)
+  }, [pedidosLiberados, tecnicosFechamento])
+
+  // UseEffect para gerar notificações quando os dados são atualizados
+  useEffect(() => {
+    if (pedidosLiberados.length > 0 || tecnicosFechamento.length > 0) {
+      gerarNotificacoes()
+    }
+  }, [gerarNotificacoes, pedidosLiberados, tecnicosFechamento])
+
+  // UseEffect para fechar dropdown ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalNotificacoesAberto && !event.target.closest('.notification-wrapper')) {
+        setModalNotificacoesAberto(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [modalNotificacoesAberto])
 
   // Dados de exemplo para detalhes de equipamentos em revisão
   const detalhesExemploRevisao = [
@@ -1024,6 +1084,28 @@ function App() {
       console.error('❌ Erro ao confirmar recebimento:', error)
       alert(`Erro ao confirmar recebimento: ${error.message}`)
     }
+    }
+
+  const abrirModalNotificacoes = () => {
+    setModalNotificacoesAberto(true)
+  }
+
+  const fecharModalNotificacoes = () => {
+    setModalNotificacoesAberto(false)
+  }
+
+  const marcarNotificacaoComoLida = (notificacaoId) => {
+    setNotificacoes(prev => 
+      prev.map(notif => 
+        notif.id === notificacaoId ? { ...notif, lida: true } : notif
+      )
+    )
+  }
+
+  const marcarTodasComoLidas = () => {
+    setNotificacoes(prev => 
+      prev.map(notif => ({ ...notif, lida: true }))
+    )
   }
 
   // Função para carregar pedidos pendentes do banco de dados
@@ -1687,6 +1769,15 @@ function App() {
           <div class="info-row">
             <span class="info-label">Última vez atendida por:</span> ${historicoOS.ultimoTecnico || 'N/A'}
           </div>
+          <div class="info-row">
+            <span class="info-label">Conferente:</span> ${historicoOS.conferente || 'N/A'}
+          </div>
+          <div class="info-row">
+            <span class="info-label">Veio com cabo?</span> ${historicoOS.cabo || 'N/A'}
+          </div>
+          <div class="info-row">
+            <span class="info-label">Data de recebimento:</span> ${historicoOS.dataRecebimento ? new Date(historicoOS.dataRecebimento).toLocaleDateString('pt-BR') : 'N/A'}
+          </div>
         </div>
 
         <table>
@@ -1840,9 +1931,76 @@ function App() {
         </div>
         
         <div className="header-actions">
-          <button className="notification-btn">
-            <i className="bi bi-bell"></i>
-          </button>
+          <div className="notification-wrapper">
+            <button 
+              className={`notification-btn ${totalNotificacoes > 1 ? 'pulse' : ''}`}
+              onClick={abrirModalNotificacoes}
+              title="Notificações"
+            >
+              <i className="bi bi-bell"></i>
+              {totalNotificacoes > 0 && (
+                <span className="notification-count">{totalNotificacoes}</span>
+              )}
+            </button>
+            
+            {/* Dropdown de Notificações */}
+            {modalNotificacoesAberto && (
+              <div className="notification-dropdown">
+                <div className="notification-dropdown-header">
+                  <div className="notification-dropdown-title">
+                    <i className="bi bi-bell"></i>
+                    Notificações
+                  </div>
+                  <div className="notification-dropdown-subtitle">
+                    <strong>{totalNotificacoes}</strong> {totalNotificacoes === 1 ? 'notificação' : 'notificações'}
+                  </div>
+                  {notificacoes.some(notif => !notif.lida) && (
+                    <button 
+                      className="btn-marcar-todas-lidas-small"
+                      onClick={marcarTodasComoLidas}
+                      title="Marcar todas como lidas"
+                    >
+                      <i className="bi bi-check-all"></i>
+                    </button>
+                  )}
+                </div>
+
+                <div className="notification-dropdown-body">
+                  {notificacoes.length > 0 ? (
+                    <div className="notificacoes-lista-dropdown">
+                      {notificacoes.map((notificacao) => (
+                        <div 
+                          key={notificacao.id}
+                          className={`notificacao-item-dropdown ${!notificacao.lida ? 'nao-lida' : ''}`}
+                          onClick={() => marcarNotificacaoComoLida(notificacao.id)}
+                        >
+                          <div className="notificacao-icone-small">
+                            {notificacao.tipo === 'pedido_liberado' ? (
+                              <i className="bi bi-box-seam text-success"></i>
+                            ) : (
+                              <i className="bi bi-clipboard-check text-warning"></i>
+                            )}
+                          </div>
+                                                     <div className="notificacao-conteudo-dropdown">
+                             <div className="notificacao-titulo-small">{notificacao.titulo}</div>
+                             <div className="notificacao-mensagem-small">{notificacao.mensagem}</div>
+                           </div>
+                          {!notificacao.lida && (
+                            <div className="notificacao-indicador-small"></div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="no-data-dropdown">
+                      <i className="bi bi-bell-slash"></i>
+                      <span>Nenhuma notificação</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -2270,21 +2428,36 @@ function App() {
                               <div className="card-title service-card-title">{tecnico.nome}</div>
                               {tecnico.ordens.length > 0 && (
                                 <div className="card-description service-card-description">
-                                  <div className="service-orders-container">
-                                    {tecnico.ordens.map((ordem, ordemIndex) => {
-                                      const isAtrasada = verificarOrdemAtrasada(ordem.dataStatus)
-                                      return (
-                                        <span 
-                                          key={ordemIndex}
-                                          className={`service-os-tag ${isAtrasada ? 'service-os-tag-delayed' : ''}`}
-                                          onClick={() => abrirModalOrdemServico({ ...ordem, tecnico: tecnico.nome })}
-                                          title={`Clique para ver detalhes da OS ${ordem.codigo}`}
-                                        >
-                                          {ordem.codigo}
-                                        </span>
-                                      )
-                                    })}
-                                  </div>
+                                  {/* Agrupar ordens por modelo */}
+                                  {Object.entries(
+                                    tecnico.ordens.reduce((acc, ordem) => {
+                                      const modelo = ordem.equipamento || ordem.TB01010_NOME || 'Sem modelo';
+                                      if (!acc[modelo]) {
+                                        acc[modelo] = [];
+                                      }
+                                      acc[modelo].push(ordem);
+                                      return acc;
+                                    }, {})
+                                  ).map(([modelo, ordens], modeloIndex) => (
+                                    <div key={modeloIndex} className="service-model-group">
+                                      <div className="service-equipment-name">{modelo}</div>
+                                      <div className="service-orders-container">
+                                        {ordens.map((ordem, ordemIndex) => {
+                                          const isAtrasada = verificarOrdemAtrasada(ordem.dataStatus)
+                                          return (
+                                            <span 
+                                              key={ordemIndex}
+                                              className={`service-os-tag ${isAtrasada ? 'service-os-tag-delayed' : ''}`}
+                                              onClick={() => abrirModalOrdemServico({ ...ordem, tecnico: tecnico.nome })}
+                                              title={`Clique para ver detalhes da OS ${ordem.codigo}`}
+                                            >
+                                              {ordem.codigo}
+                                            </span>
+                                          )
+                                        })}
+                                      </div>
+                                    </div>
+                                  ))}
                                 </div>
                               )}
                               <div className="card-meta">
@@ -2320,14 +2493,23 @@ function App() {
                     <div className="card-description pieces-card-description">
                       <div className="pieces-orders-container">
                         {pedidosLiberados.map((pedido, index) => (
-                          <span 
-                            key={index}
-                            className="pieces-order-tag pieces-order-tag-released"
-                            onClick={() => abrirModalPedido(pedido)}
-                            title={`Clique para ver detalhes do pedido ${pedido.numero}`}
-                          >
-                            {pedido.numero}
-                          </span>
+                          <div key={index} className="pieces-order-wrapper">
+                            <span
+                              className="pieces-order-tag pieces-order-tag-released"
+                              onClick={() => abrirModalPedido(pedido)}
+                              title={`Clique para ver detalhes do pedido ${pedido.numero}`}
+                            >
+                              {pedido.numero}
+                            </span>
+                            <div className="pieces-order-products">
+                              {pedido.pecas && pedido.pecas.map((peca, i) => (
+                                <div key={i} className="pieces-order-product-line">
+                                  <span className="pieces-order-product-name">{peca.produto}</span>
+                                  <span className="pieces-order-product-qty">x{peca.quantidade}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -2344,15 +2526,24 @@ function App() {
                     <div className="card-description pieces-card-description">
                       <div className="pieces-orders-container">
                         {pedidosPendentes.map((pedido, index) => (
-                          <span 
-                            key={index}
-                            className={`pieces-order-tag pieces-order-tag-pending ${pedido.atrasado ? 'delayed' : ''}`}
-                            onClick={() => abrirModalPedido(pedido)}
-                            title={`Clique para ver detalhes do pedido ${pedido.numero}${pedido.atrasado ? ' (Atrasado)' : ''}`}
-                          >
-                            {pedido.numero}
-                            {pedido.atrasado && <span className="delay-indicator"></span>}
-                          </span>
+                          <div key={index} className="pieces-order-wrapper">
+                            <span
+                              className={`pieces-order-tag pieces-order-tag-pending ${pedido.atrasado ? 'delayed' : ''}`}
+                              onClick={() => abrirModalPedido(pedido)}
+                              title={`Clique para ver detalhes do pedido ${pedido.numero}${pedido.atrasado ? ' (Atrasado)' : ''}`}
+                            >
+                              {pedido.numero}
+                              {pedido.atrasado && <span className="delay-indicator"></span>}
+                            </span>
+                            <div className="pieces-order-products">
+                              {pedido.pecas && pedido.pecas.map((peca, i) => (
+                                <div key={i} className="pieces-order-product-line">
+                                  <span className="pieces-order-product-name">{peca.produto}</span>
+                                  <span className="pieces-order-product-qty">x{peca.quantidade}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -2548,6 +2739,7 @@ function App() {
                             )}
                             <th>Código</th>
                             <th>Número de Série</th>
+                            <th>Motivo</th>
                             <th>Ordem de Serviço</th>
                             <th>Data de Abertura</th>
                             <th style={{ textAlign: 'center' }}>Últ. Cont. PB</th>
@@ -2600,6 +2792,7 @@ function App() {
                                 )}
                                 <td>{item.codprod || ''}</td>
                                 <td>{item.serie || ''}</td>
+                                <td>{item.motivoret || ''}</td>
                                 <td>{item.OS_REVISAO || ''}</td>
                                 <td>{formatarDataHora(item.OS_REVISAO_DATA)}</td>
                                 <td style={{ textAlign: 'center' }}>{formatarNumero(item.ULT_CONTADOR_PB)}</td>
@@ -2701,8 +2894,13 @@ function App() {
                     </div>
                   )}
                   {!loadingHistorico && !errorHistorico && historicoOS && (
-                    <div className="modal-info-line">
-                      Último atendimento: {formatarData(historicoOS.ultimoAtendimento)} | Última OS: {historicoOS.ultimaOS || ''} | Última vez atendida por: {historicoOS.ultimoTecnico || ''}
+                    <div className="modal-info-section">
+                      <div className="modal-info-line">
+                        Último atendimento: {formatarData(historicoOS.ultimoAtendimento)} | Última OS: {historicoOS.ultimaOS || ''} | Última vez atendida por: {historicoOS.ultimoTecnico || ''}
+                      </div>
+                      <div className="modal-info-line-extra">
+                        Conferente: {historicoOS.conferente || 'N/A'} | Veio com cabo? {historicoOS.cabo || 'N/A'} | Data de recebimento: {historicoOS.dataRecebimento ? formatarData(historicoOS.dataRecebimento) : 'N/A'}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -2969,7 +3167,9 @@ function App() {
             </div>
           </div>
         </div>
-      )}
+              )}
+
+
 
     </div>
   )

@@ -294,11 +294,11 @@ export const getEquipamentosAguardandoRevisao = async (filtrosMarcas = [], filtr
 
     const query = `
       WITH DadosCompletos AS (
-        SELECT codprod, TB01010_NOME, serie,
+        SELECT codprod, TB01010_NOME, serie, motivoret,
                (SELECT TOP 1 TB02115_CODIGO FROM TB02115
                  WHERE TB02115_CODCLI = '00000000' 
-                   AND TB02115_NUMSERIE = serie AND TB02115_PRODUTO = codprod
-                   AND TB02115_DTFECHA IS NULL AND TB02115_STATUS = '9F') OS_REVISAO,
+                 AND TB02115_NUMSERIE = serie AND TB02115_PRODUTO = codprod
+                 AND TB02115_DTFECHA IS NULL AND TB02115_STATUS = '9F') OS_REVISAO,
                (SELECT TOP 1 TB02115_DATA FROM TB02115
                  WHERE TB02115_CODCLI = '00000000' 
                    AND TB02115_NUMSERIE = serie AND TB02115_PRODUTO = codprod
@@ -366,7 +366,7 @@ export const getEquipamentosAguardandoRevisao = async (filtrosMarcas = [], filtr
 export const getDadosDetalhadosAguardandoRevisao = async () => {
   try {
     const query = `
-      SELECT codprod, TB01010_NOME, serie, TB01047_NOME, TB01018_NOME,
+      SELECT codprod, TB01010_NOME, serie, TB01047_NOME, TB01018_NOME, motivoret,
              (SELECT TOP 1 TB02115_CODIGO FROM TB02115
                WHERE TB02115_CODCLI = '00000000' 
                  AND TB02115_NUMSERIE = serie AND TB02115_PRODUTO = codprod
@@ -428,7 +428,7 @@ export const getDadosDetalhadosAguardandoRevisao = async () => {
 export const getDetalhesEquipamentoAguardandoRevisao = async (nomeEquipamento) => {
   try {
     const query = `
-      SELECT codprod, TB01010_NOME, serie, TB01047_NOME, TB01018_NOME,
+      SELECT codprod, TB01010_NOME, serie, TB01047_NOME, TB01018_NOME, motivoret,
              (SELECT TOP 1 TB02115_CODIGO FROM TB02115
                WHERE TB02115_CODCLI = '00000000' 
                  AND TB02115_NUMSERIE = serie AND TB02115_PRODUTO = codprod
@@ -515,9 +515,20 @@ export async function getHistoricoOrdemServico(serie) {
       ORDER BY TB02122_DTFECHA DESC, TB02115_CODIGO DESC
     `;
     
-    const [resultHeader, resultHistorico] = await Promise.all([
+    // Query para buscar dados adicionais da WP_OFICINA_RECEB1 (conferente, cabo, data recebimento)
+    const queryDadosOficina = `
+      SELECT users.[name] as Conferente,
+             CASE WHEN caboret = 1 THEN 'Sim' ELSE 'Não' END as Cabo,
+             dtreceb as DataRecebimento
+      FROM [WP_OFICINA_RECEB1]
+      LEFT JOIN users ON users.id = conferente
+      WHERE serie = '${serie}'
+    `;
+    
+    const [resultHeader, resultHistorico, resultDadosOficina] = await Promise.all([
       executeQuery(queryHeader),
-      executeQuery(queryHistorico)
+      executeQuery(queryHistorico),
+      executeQuery(queryDadosOficina)
     ]);
     
     if (resultHistorico.recordset.length === 0) {
@@ -526,6 +537,9 @@ export async function getHistoricoOrdemServico(serie) {
         ultimoAtendimento: null,
         ultimaOS: null,
         ultimoTecnico: null,
+        conferente: null,
+        cabo: null,
+        dataRecebimento: null,
         historico: []
       };
     }
@@ -536,6 +550,9 @@ export async function getHistoricoOrdemServico(serie) {
     // Dados do header (registro com data mais recente)
     const dadosHeader = resultHeader.recordset.length > 0 ? resultHeader.recordset[0] : null;
     
+    // Dados adicionais da oficina
+    const dadosOficina = resultDadosOficina.recordset.length > 0 ? resultDadosOficina.recordset[0] : null;
+    
     return {
       equipamento: {
         serie: primeiroRegistroHistorico.TB02115_NUMSERIE,
@@ -544,6 +561,9 @@ export async function getHistoricoOrdemServico(serie) {
       ultimoAtendimento: dadosHeader?.TB02122_DTFECHA || null,
       ultimaOS: dadosHeader?.TB02115_CODIGO || '',
       ultimoTecnico: dadosHeader?.TB01024_NOME || '',
+      conferente: dadosOficina?.Conferente || null,
+      cabo: dadosOficina?.Cabo || null,
+      dataRecebimento: dadosOficina?.DataRecebimento || null,
       historico: resultHistorico.recordset.map(row => ({
         os: row.TB02115_CODIGO,
         data: row.TB02115_DATA,
@@ -709,7 +729,7 @@ export async function getEquipamentosEmServico() {
     
     const query = `
       SELECT TB02115_CODIGO, TB02115_DATA, TB02115_CODCLI, TB02115_CODEMP, 
-             TB02115_NUMSERIE, TB02115_PRODUTO, TB02115_CODTEC, TB01024_NOME,
+             TB02115_NUMSERIE, TB02115_PRODUTO, TB01010_NOME, TB02115_CODTEC, TB01024_NOME,
              (SELECT TOP 1 TB02130_DATA FROM TB02130 
                WHERE TB02130_CODIGO = TB02115_CODIGO AND TB02130_TIPO = 'O'
                  AND TB02130_CODCAD = TB02115_CODCLI AND TB02130_STATUS = '9G'
